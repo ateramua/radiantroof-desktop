@@ -1,55 +1,36 @@
-1️⃣ Next.js Frontend UI Project
-Folder structure example
-/frontend
-├─ public/
-├─ src/
-│  ├─ components/      # Reusable UI components
-│  │  ├─ Header/
-│  │  │  ├─ Header.tsx
-│  │  │  └─ Header.stories.tsx
-│  │  └─ ProductCard/
-│  ├─ pages/           # Next.js pages
-│  ├─ styles/
-│  └─ utils/
-├─ .env.local          # Environment variables
-├─ package.json
-├─ README.md
-└─ tsconfig.json
-README.md (high-level)
-# RadiantRoof Frontend
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-## Project Overview
-Next.js UI for RadiantRoof eCommerce platform. Handles routing, components, and rendering.
+## Getting Started
 
-## Setup
+First, run the development server:
+
 ```bash
-npm install
 npm run dev
-Environment Variables
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-NEXT_PUBLIC_API_URL → Backend API URL
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-NEXT_PUBLIC_JWT_SECRET → JWT for authentication (if needed in frontend)
+You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
 
-Folder Structure
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-components/ → Reusable UI components
+## Learn More
 
-pages/ → Next.js pages
+To learn more about Next.js, take a look at the following resources:
 
-styles/ → Global CSS/SCSS
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-Documentation
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-Component-level documentation is in Storybook
+## Deploy on Vercel
 
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-### **Component-level docs**
-- Use **Storybook**:
-```bash
-npx sb init
-npm run storybook
-
-Each component has a .stories.tsx file describing props, usage, and examples.
-
-This scales automatically as you add new components.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
