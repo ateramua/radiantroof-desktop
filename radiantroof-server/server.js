@@ -1,21 +1,35 @@
-// src/server.js
-const express = require('express');
-const cors = require('cors');
 require('dotenv').config();
-
-const houseRoutes = require('./src/routes/houseRoutes');
-const userRoutes = require('./src/routes/userRoutes');
+const express = require("express");
+const cors = require("cors");
+const propertyRoutes = require("./src/routes/propertyRoutes"); // server.js is outside src
+const userRoutes = require("./src/routes/userRoutes");
+const db = require("./src/models");
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Mount routes
-app.use('/api/houses', houseRoutes);
-app.use('/api/users', userRoutes);
+// Routes
+app.use("/api/properties", propertyRoutes);
+app.use("/api/users", userRoutes);
 
-// Simple ping route for health check
-app.get('/ping', (req, res) => res.json({ success: true, message: 'pong' }));
+// Health check
+app.get("/api/health", (req, res) => {
+  res.json({ status: "OK", timestamp: new Date() });
+});
 
+// Database connection and server start
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+db.sequelize.sync({ alter: true })
+  .then(() => {
+    console.log("Database connected and synchronized");
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error("Unable to connect to database:", err);
+  });

@@ -1,19 +1,26 @@
-const { Sequelize } = require('sequelize');
-require('dotenv').config();
+const { Sequelize, DataTypes } = require("sequelize");
+const config = require("../../config/config");
 
-const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASS,
-  {
-    host: process.env.DB_HOST,
-    dialect: 'postgres',
-    logging: console.log,
-  }
-);
+const sequelize = new Sequelize({
+  dialect: "postgres",
+  host: config.database.host,
+  port: config.database.port,
+  database: config.database.name,
+  username: config.database.user,
+  password: config.database.password,
+  logging: false,
+});
 
-sequelize.authenticate()
-  .then(() => console.log('Database connected!'))
-  .catch(err => console.error('DB connection error:', err));
+// Initialize models
+const Property = require("./Property")(sequelize, DataTypes);
+const User = require("./User")(sequelize, DataTypes);
 
-module.exports = sequelize;
+// Export an object containing Sequelize instance and models
+const db = {
+  sequelize,
+  Sequelize,
+  Property,
+  User,
+};
+
+module.exports = db;
