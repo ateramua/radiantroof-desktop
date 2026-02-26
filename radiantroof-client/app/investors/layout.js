@@ -1,11 +1,17 @@
-import React from "react";
-import DashboardSidebar from "../../components/DashboardSidebar";
+// app/investors/layout.js
+"use client";
 
-export default function InvestorLayout({ children }) {
+import Protected from "../../components/Protected";
+import { AuthProvider } from "../../context/AuthContext";
+import { AuthProvider } from "../../context/AuthContext";
+
+export default function InvestorsLayout({ children }) {
   return (
-    <div className="flex gap-6">
-      <DashboardSidebar userType="investor" />
-      <div className="flex-1">{children}</div>
-    </div>
+    <AuthProvider>
+      <Protected roles={["investor"]}>
+        <Header></Header>
+        {children}
+      </Protected>
+    </AuthProvider>
   );
 }

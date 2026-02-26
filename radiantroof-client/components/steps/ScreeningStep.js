@@ -16,8 +16,8 @@ export default function ScreeningStep({ propertyId, updateMetrics }) {
     // Calculate derived metrics
     const mao = propertyData.arv - propertyData.repairs - 15000; // Example MAO formula
     const projectedProfit = propertyData.arv - propertyData.repairs - propertyData.askingPrice;
-    const cashOnCash = propertyData.askingPrice > 0 
-      ? Math.round((projectedProfit / propertyData.askingPrice) * 100) 
+    const cashOnCash = propertyData.askingPrice > 0
+      ? Math.round((projectedProfit / propertyData.askingPrice) * 100)
       : 0;
 
     // Update sidebar via parent
@@ -35,7 +35,7 @@ export default function ScreeningStep({ propertyId, updateMetrics }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setPropertyData({ ...propertyData, [name]: name === 'notes' ? value : Number(value) });
+    setPropertyData({ ...propertyData, [name]: name === "notes" ? value : Number(value) });
   };
 
   const handleSelectChange = (e) => {
@@ -56,7 +56,7 @@ export default function ScreeningStep({ propertyId, updateMetrics }) {
   return (
     <div className="bg-white p-6 rounded shadow space-y-6">
       <h3 className="text-xl font-bold mb-4">Property Screening</h3>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block mb-1 font-medium">ARV ($)</label>
@@ -94,8 +94,8 @@ export default function ScreeningStep({ propertyId, updateMetrics }) {
             name="condition"
             value={propertyData.condition}
             onChange={handleSelectChange}
-            className="border
->
+            className="border p-2 rounded w-full"
+          >
             <option>Excellent</option>
             <option>Good</option>
             <option>Fair</option>
@@ -144,9 +144,13 @@ export default function ScreeningStep({ propertyId, updateMetrics }) {
         <h4 className="font-semibold mb-2">Calculated Metrics</h4>
         <p>MAO: ${(propertyData.arv - propertyData.repairs - 15000).toLocaleString()}</p>
         <p>Projected Profit: ${(propertyData.arv - propertyData.repairs - propertyData.askingPrice).toLocaleString()}</p>
-        <p>Cash-on-Cash: {propertyData.askingPrice > 0 
-          ? Math.round(((propertyData.arv - propertyData.repairs - propertyData.askingPrice) / propertyData.askingPrice) * 100) 
-          : 0}%</p>
+        <p>
+          Cash-on-Cash:{" "}
+          {propertyData.askingPrice > 0
+            ? Math.round(((propertyData.arv - propertyData.repairs - propertyData.askingPrice) / propertyData.askingPrice) * 100)
+            : 0}
+          %
+        </p>
       </div>
 
       <button

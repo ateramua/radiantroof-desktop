@@ -1,11 +1,21 @@
-import React from "react";
-import DashboardSidebar from "../../components/DashboardSidebar";
+"use client";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { AuthProvider } from "../context/AuthContext";
+import "./globals.css";
+
+// app/admin/layout.js
+"use client";
+
+import Protected from "../../components/Protected";
+import { AuthProvider } from "../../context/AuthContext";
 
 export default function AdminLayout({ children }) {
   return (
-    <div className="flex gap-6">
-      <DashboardSidebar userType="admin" />
-      <div className="flex-1">{children}</div>
-    </div>
+    <AuthProvider>
+      <Protected roles={["admin"]}>
+        {children}
+      </Protected>
+    </AuthProvider>
   );
 }
