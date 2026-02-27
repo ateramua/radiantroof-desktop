@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import api from "../lib/api";
+import api from "../../lib/api";  // Changed from '../lib/api' to '../../lib/api'
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,7 +13,7 @@ export default function RegisterPage() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "user" // Default role
+    role: "user"
   });
 
   const [error, setError] = useState("");

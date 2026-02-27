@@ -1,69 +1,92 @@
 "use client";
 
-import React from "react";
 import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
-  // Redirect to dashboard if logged in, otherwise login
-  const handleDashboardClick = () => {
-    if (user) router.push("/dashboard");
-    else router.push("/login");
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
   };
 
-  // Redirect to admin if admin, otherwise login
-  const handleAdminClick = () => {
-    if (user?.isAdmin) router.push("/admin");
-    else router.push("/login");
-  };
-
-  // Redirect to investors page if logged in, otherwise login
-  const handleInvestorsClick = (e) => {
-    e.preventDefault(); // Prevent default Link behavior
-    if (user) router.push("/investors");
-    else router.push("/login");
-  };
+  const isAdminRoute = pathname?.startsWith('/admin');
+  const isDashboardRoute = pathname?.startsWith('/dashboard');
 
   return (
-    <header className="bg-[#004F2D] shadow p-4 flex justify-between items-center">
-      <Link href="/" className="font-bold text-xl text-white hover:text-[#A6F0C6]">
-        Radiant Roof
-      </Link>
+    <header className="bg-white shadow-md">
+      <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
+        {/* Logo */}
+        <Link href="/" className="text-2xl font-bold text-blue-600">
+          RadiantRoof
+        </Link>
 
-      <nav className="space-x-4 flex items-center">
-        {/* Public Links */}
-        <Link href="/" className="text-white hover:text-[#A6F0C6]">Home</Link>
-        <Link href="/properties" className="text-white hover:text-[#A6F0C6]">Properties</Link>
+        {/* Navigation Links */}
+        <div className="flex items-center space-x-6">
+          <Link href="/properties" className="hover:text-blue-600 transition">
+            Properties
+          </Link>
+          <Link href="/investors" className="hover:text-blue-600 transition">
+            Investors
+          </Link>
+          <Link href="/contact" className="hover:text-blue-600 transition">
+            Contact
+          </Link>
 
-        {/* Protected Link */}
-        <button
-          onClick={handleInvestorsClick}
-          className="text-white hover:text-[#A6F0C6] px-0 py-0 bg-transparent"
-        >
-          Investors
-        </button>
+          {/* Auth-based buttons */}
+          {user ? (
+            <>
+              {/* For admin users: Show "Admin" button only when NOT in admin section */}
+              {user.role === 'admin' && !isAdminRoute && (
+                <Link 
+                  href="/admin" 
+                  className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition"
+                >
+                  Admin
+                </Link>
+              )}
+              
+              {/* For regular users: Show "Dashboard" button only when NOT in dashboard section */}
+              {user.role === 'user' && !isDashboardRoute && (
+                <Link 
+                  href="/dashboard" 
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                >
+                  Dashboard
+                </Link>
+              )}
 
-        <Link href="/about" className="text-white hover:text-[#A6F0C6]">About</Link>
-        <Link href="/contact" className="text-white hover:text-[#A6F0C6]">Contact</Link>
-
-        {/* Authenticated Buttons */}
-        <button
-          onClick={handleDashboardClick}
-          className="px-3 py-1 bg-white text-[#004F2D] rounded hover:bg-[#A6F0C6] transition"
-        >
-          Dashboard
-        </button>
-
-        <button
-          onClick={handleAdminClick}
-          className="px-4 py-2 bg-white text-[#004F2D] rounded hover:bg-[#A6F0C6] transition"
-        >
-          Admin
-        </button>
+              {/* Logout button - always visible when logged in */}
+              <button
+                onClick={handleLogout}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center space-x-3">
+              {/* Sign Up Button - New */}
+              <Link 
+                href="/register" 
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+              >
+                Sign Up
+              </Link>
+              {/* Login Button */}
+              <Link 
+                href="/login" 
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+              >
+                Login
+              </Link>
+            </div>
+          )}
+        </div>
       </nav>
     </header>
   );

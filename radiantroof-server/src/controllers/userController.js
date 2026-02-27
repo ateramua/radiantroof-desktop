@@ -1,8 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const db = require('../models'); // or '../../../models' depending on your structure
+const db = require('../models');
 const User = db.User;
-
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
@@ -11,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
 const getUsers = async (req, res) => {
   try {
     const users = await User.findAll({
-      attributes: ['id', 'name', 'email', 'role', 'created_at']
+      attributes: ['id', 'name', 'email', 'role', 'createdAt']
     });
     res.json(users);
   } catch (error) {
@@ -25,7 +24,7 @@ const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findByPk(id, {
-      attributes: ['id', 'name', 'email', 'role', 'created_at']
+      attributes: ['id', 'name', 'email', 'role', 'createdAt']
     });
     
     if (!user) {
@@ -39,10 +38,13 @@ const getUserById = async (req, res) => {
   }
 };
 
-// Create new user
+// Create new user - UPDATED with role enforcement
 const createUser = async (req, res) => {
   try {
-    const { name, email, password, role = 'user' } = req.body;
+    const { name, email, password, role } = req.body;
+    
+    // Force role to be 'user' for public registration (security)
+    const userRole = 'user'; // Override any role sent from frontend
     
     // Validation
     if (!name || !email || !password) {
@@ -62,12 +64,12 @@ const createUser = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Create user
+    // Create user with forced 'user' role
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      role
+      role: userRole // Always 'user' for public registration
     });
     
     const userResponse = user.toJSON();

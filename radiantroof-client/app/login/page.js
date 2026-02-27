@@ -1,25 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
-  const { login, user } = useAuth();
+  const { user, login } = useAuth();
   const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // If user is already logged in, redirect appropriately
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'admin') {
+        console.log('🔄 Already logged in as admin, redirecting to /admin');
+        window.location.href = '/admin';
+      } else {
+        console.log('🔄 Already logged in as user, redirecting to /dashboard');
+        window.location.href = '/dashboard';
+      }
+    }
+  }, [user]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsRedirecting(true);
+    
     try {
-      await login(email, password);
+      const userData = await login(email, password);
+      console.log('✅ Login successful:', userData);
       setError("");
-      router.push("/"); // redirect to home after login
+      // Redirect will be handled by the useEffect above
     } catch (err) {
+      console.error('❌ Login error:', err);
       setError("Invalid credentials");
+      setIsRedirecting(false);
     }
   };
 
@@ -59,9 +78,10 @@ export default function LoginPage() {
           />
           <button
             type="submit"
-            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3 rounded-xl shadow-lg hover:from-purple-600 hover:to-blue-600 transition-all duration-300"
+            disabled={isRedirecting}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-3 rounded-xl shadow-lg hover:from-purple-600 hover:to-blue-600 transition-all duration-300 disabled:opacity-50"
           >
-            Sign In
+            {isRedirecting ? "Redirecting..." : "Sign In"}
           </button>
           {error && <p className="text-red-500 text-center mt-2">{error}</p>}
         </form>
