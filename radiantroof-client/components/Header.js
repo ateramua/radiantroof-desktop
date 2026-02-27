@@ -22,7 +22,7 @@ export default function Header() {
       <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
         {/* Logo */}
         <Link href="/" className="text-2xl font-bold text-blue-600">
-          RadiantRoof
+          Radiant Roof Realty
         </Link>
 
         {/* Navigation Links */}

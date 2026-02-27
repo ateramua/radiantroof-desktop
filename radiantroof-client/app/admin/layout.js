@@ -40,19 +40,25 @@ export default function AdminLayout({ children }) {
               href="/admin" 
               className="py-4 px-2 text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600 transition"
             >
-              Dashboard
+              📊 Dashboard
             </Link>
             <Link 
               href="/admin/users" 
               className="py-4 px-2 text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600 transition"
             >
-              User Management
+              👥 User Management
             </Link>
             <Link 
               href="/admin/properties" 
               className="py-4 px-2 text-gray-700 hover:text-blue-600 border-b-2 border-transparent hover:border-blue-600 transition"
             >
-              Properties
+              📋 Property Inventory
+            </Link>
+            <Link 
+              href="/admin/properties/AddProperties" 
+              className="py-4 px-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition ml-auto"
+            >
+              ➕ Add Property
             </Link>
           </div>
         </div>
