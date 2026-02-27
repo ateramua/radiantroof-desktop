@@ -1,27 +1,19 @@
-"use client"; // needed because AuthProvider is a client component
+// app/layout.js
+"use client";
 
-import { AuthProvider } from "../context/AuthContext";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import Home from "@/app/page"; // import your Home server component
-import "./globals.css";// Tailwind global styles
+import { AuthProvider } from "../context/AuthContext";
+import "./globals.css";
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="bg-gray-50 min-h-screen flex flex-col">
         <AuthProvider>
-          {/* Header always visible */}
-          <Header />
-
-          {/* Main content */}
-          <main className="flex-1 container mx-auto px-4 py-8">
-            <Home />
-            {children} {/* any nested pages/components */}
+          <Header />               {/* Your header stays intact */}
+          <main className="flex-1"> {/* This renders the current route's page */}
+            {children}
           </main>
-
-          {/* Footer always visible */}
-          <Footer />
         </AuthProvider>
       </body>
     </html>
