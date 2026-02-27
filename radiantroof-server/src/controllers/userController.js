@@ -1,133 +1,196 @@
-const db = require("../models");
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const db = require('../models'); // or '../../../models' depending on your structure
 const User = db.User;
-const bcrypt = require("bcryptjs");
+
+
+// JWT Secret
+const JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
 
 // Get all users
 const getUsers = async (req, res) => {
   try {
-    const users = await User.findAll({ attributes: { exclude: ['password'] } });
+    const users = await User.findAll({
+      attributes: ['id', 'name', 'email', 'role', 'created_at']
+    });
     res.json(users);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ error: 'Database error' });
   }
 };
 
 // Get user by ID
 const getUserById = async (req, res) => {
-  const { id } = req.params;
   try {
-    const user = await User.findByPk(id, { attributes: { exclude: ['password'] } });
+    const { id } = req.params;
+    const user = await User.findByPk(id, {
+      attributes: ['id', 'name', 'email', 'role', 'created_at']
+    });
+    
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: 'User not found' });
     }
+    
     res.json(user);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Database error' });
   }
 };
 
 // Create new user
 const createUser = async (req, res) => {
-  const { name, email, password, role } = req.body;
-  
   try {
+    const { name, email, password, role = 'user' } = req.body;
+    
+    // Validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        required: ['name', 'email', 'password']
+      });
+    }
+    
     // Check if user exists
     const existingUser = await User.findOne({ where: { email } });
+    
     if (existingUser) {
-      return res.status(400).json({ error: "Email already exists" });
+      return res.status(409).json({ error: 'User with this email already exists' });
     }
-
+    
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
+    // Create user
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
-      role: role || "user"
+      role
     });
-
-    // Return user without password
-    const { password: _, ...userWithoutPassword } = user.toJSON();
-    res.status(201).json(userWithoutPassword);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    
+    const userResponse = user.toJSON();
+    delete userResponse.password;
+    
+    res.status(201).json({
+      message: 'User created successfully',
+      user: userResponse
+    });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Database error' });
   }
 };
 
 // Update user
 const updateUser = async (req, res) => {
-  const { id } = req.params;
-  const { name, email, role } = req.body;
-  
   try {
+    const { id } = req.params;
+    const { name, email, role } = req.body;
+    
     const user = await User.findByPk(id);
+    
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: 'User not found' });
     }
-
-    // Update fields
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (role) user.role = role;
-
-    await user.save();
-
-    // Return user without password
-    const { password, ...userWithoutPassword } = user.toJSON();
-    res.json(userWithoutPassword);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    
+    await user.update({ name, email, role });
+    
+    const userResponse = user.toJSON();
+    delete userResponse.password;
+    
+    res.json({
+      message: 'User updated successfully',
+      user: userResponse
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Database error' });
   }
 };
 
 // Delete user
 const deleteUser = async (req, res) => {
-  const { id } = req.params;
   try {
+    const { id } = req.params;
+    
     const user = await User.findByPk(id);
+    
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: 'User not found' });
     }
+    
     await user.destroy();
-    res.json({ message: "User deleted successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    
+    res.json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: 'Database error' });
   }
 };
 
-// Login (to be implemented with JWT)
+// Login user
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
-  
   try {
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      return res.status(401).json({ error: "Invalid credentials" });
+    const { email, password } = req.body;
+    
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({ 
+        error: 'Email and password are required' 
+      });
     }
-
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    // TODO: Generate JWT token
-    const { password: _, ...userWithoutPassword } = user.toJSON();
-    res.json({ 
-      user: userWithoutPassword,
-      token: "JWT_TOKEN_HERE" // Placeholder
+    
+    // Find user
+    const user = await User.findOne({ 
+      where: { email },
+      attributes: ['id', 'name', 'email', 'password', 'role']
     });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    // Check password
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    // Generate JWT
+    const token = jwt.sign(
+      { 
+        id: user.id, 
+        email: user.email, 
+        role: user.role 
+      },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    // Remove password from response
+    const userResponse = user.toJSON();
+    delete userResponse.password;
+    
+    res.json({
+      message: 'Login successful',
+      token,
+      user: userResponse
+    });
+  } catch (error) {
+    console.error('Error logging in:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
-
+// Export all functions
 module.exports = {
   getUsers,
   getUserById,
   createUser,
   updateUser,
   deleteUser,
-  loginUser,
+  loginUser
 };
