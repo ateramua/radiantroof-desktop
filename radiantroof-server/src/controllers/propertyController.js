@@ -16,9 +16,7 @@ const getPropertyById = async (req, res) => {
   const { id } = req.params;
   try {
     const property = await Property.findByPk(id);
-    if (!property) {
-      return res.status(404).json({ error: "Property not found" });
-    }
+    if (!property) return res.status(404).json({ error: "Property not found" });
     res.json(property);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -35,27 +33,27 @@ const createProperty = async (req, res) => {
   }
 };
 
-// Update property (including workflow steps)
+// Update property
 const updateProperty = async (req, res) => {
   const { id } = req.params;
   const { screening, analysis, decision, acquisition, ...otherFields } = req.body;
 
   try {
     const property = await Property.findByPk(id);
-    if (!property) {
-      return res.status(404).json({ error: "Property not found" });
-    }
+    if (!property) return res.status(404).json({ error: "Property not found" });
 
-    // Update only provided fields
-    if (screening) property.screening = screening;
-    if (analysis) property.analysis = analysis;
-    if (decision) property.decision = decision;
-    if (acquisition) property.acquisition = acquisition;
-    
-    // Update other fields if provided
-    Object.assign(property, otherFields);
+    // Update nested acquisition workflow safely
+    const updatedAcquisition = { ...property.acquisition };
+    if (screening) updatedAcquisition.screening = screening;
+    if (analysis) updatedAcquisition.analysis = analysis;
+    if (decision) updatedAcquisition.decision = decision;
+    if (acquisition) updatedAcquisition.acquisition = acquisition;
 
-    await property.save();
+    await property.update({
+      ...otherFields,
+      acquisition: updatedAcquisition,
+    });
+
     res.json(property);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -67,9 +65,7 @@ const deleteProperty = async (req, res) => {
   const { id } = req.params;
   try {
     const property = await Property.findByPk(id);
-    if (!property) {
-      return res.status(404).json({ error: "Property not found" });
-    }
+    if (!property) return res.status(404).json({ error: "Property not found" });
     await property.destroy();
     res.json({ message: "Property deleted successfully" });
   } catch (err) {
@@ -82,9 +78,7 @@ const getPropertyOffers = async (req, res) => {
   const { id } = req.params;
   try {
     const property = await Property.findByPk(id);
-    if (!property) {
-      return res.status(404).json({ error: "Property not found" });
-    }
+    if (!property) return res.status(404).json({ error: "Property not found" });
     res.json(property.acquisition?.offers || []);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -98,28 +92,21 @@ const addPropertyOffer = async (req, res) => {
 
   try {
     const property = await Property.findByPk(id);
-    if (!property) {
-      return res.status(404).json({ error: "Property not found" });
-    }
+    if (!property) return res.status(404).json({ error: "Property not found" });
 
-    // Initialize acquisition if needed
-    if (!property.acquisition) {
-      property.acquisition = {};
-    }
-    if (!property.acquisition.offers) {
-      property.acquisition.offers = [];
-    }
+    const acquisition = property.acquisition || {};
+    acquisition.offers = acquisition.offers || [];
 
-    // Add offer with timestamp
     const newOffer = {
       ...offer,
-      id: Date.now(), // Simple unique ID
+      id: Date.now(),
       createdAt: new Date().toISOString(),
     };
-    property.acquisition.offers.push(newOffer);
-    
-    await property.save();
-    res.json(property.acquisition.offers);
+    acquisition.offers.push(newOffer);
+
+    await property.update({ acquisition });
+
+    res.json(acquisition.offers);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

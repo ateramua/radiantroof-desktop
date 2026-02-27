@@ -9,13 +9,22 @@ export default function Header() {
   const { user } = useAuth();
   const router = useRouter();
 
+  // Redirect to dashboard if logged in, otherwise login
   const handleDashboardClick = () => {
     if (user) router.push("/dashboard");
     else router.push("/login");
   };
 
+  // Redirect to admin if admin, otherwise login
   const handleAdminClick = () => {
     if (user?.isAdmin) router.push("/admin");
+    else router.push("/login");
+  };
+
+  // Redirect to investors page if logged in, otherwise login
+  const handleInvestorsClick = (e) => {
+    e.preventDefault(); // Prevent default Link behavior
+    if (user) router.push("/investors");
     else router.push("/login");
   };
 
@@ -29,7 +38,15 @@ export default function Header() {
         {/* Public Links */}
         <Link href="/" className="text-white hover:text-[#A6F0C6]">Home</Link>
         <Link href="/properties" className="text-white hover:text-[#A6F0C6]">Properties</Link>
-        <Link href="/investors" className="text-white hover:text-[#A6F0C6]">Investors</Link>
+
+        {/* Protected Link */}
+        <button
+          onClick={handleInvestorsClick}
+          className="text-white hover:text-[#A6F0C6] px-0 py-0 bg-transparent"
+        >
+          Investors
+        </button>
+
         <Link href="/about" className="text-white hover:text-[#A6F0C6]">About</Link>
         <Link href="/contact" className="text-white hover:text-[#A6F0C6]">Contact</Link>
 
