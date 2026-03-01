@@ -1,21 +1,22 @@
 import axios from "axios";
 
+// Make sure this points to your backend
 const api = axios.create({
-  baseURL: "/api",
-  withCredentials: true, // for refresh token cookies
+  baseURL: "http://localhost:5001/api",  // Your backend URL
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
 
-// Request interceptor for debugging
+// Request interceptor
 api.interceptors.request.use((config) => {
   const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   
-  // Debug logging
   console.log('🚀 API Request:', {
     method: config.method.toUpperCase(),
     url: config.baseURL + config.url,
@@ -27,7 +28,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor for debugging
+// Response interceptor
 api.interceptors.response.use(
   (response) => {
     console.log('✅ API Response:', {
@@ -47,14 +48,19 @@ api.interceptors.response.use(
         data: error.config?.data
       }
     });
+    
+    if (error.code === 'ECONNABORTED') {
+      console.error('❌ Request timeout - backend might be down');
+    }
+    
     return Promise.reject(error);
   }
 );
 
 // Function to call server-side getProperties
 export const getProperties = async () => {
-  const res = await api.get("/properties"); // matches backend route
-  return res.data;                          // return array of properties
+  const res = await api.get("/properties");
+  return res.data;
 };
 
 export default api;

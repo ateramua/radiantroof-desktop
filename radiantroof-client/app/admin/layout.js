@@ -5,10 +5,13 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import DashboardSidebar from "@/components/DashboardSidebar";
+
 
 export default function AdminLayout({ children }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const userRole = user?.role; // This should be "admin" for you
 
   useEffect(() => {
     if (!loading) {
@@ -35,6 +38,10 @@ export default function AdminLayout({ children }) {
       {/* Admin Navigation */}
       <nav className="bg-white shadow-md">
         <div className="container mx-auto px-4">
+              <DashboardSidebar
+                  user={user}
+                  userRole={userRole}  // Make sure this is "admin"
+                />
           <div className="flex space-x-6">
             <Link 
               href="/admin" 

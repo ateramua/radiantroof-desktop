@@ -1,10 +1,41 @@
 import React from "react";
+import Link from "next/link";
 
 export default function DealSidebar({ step, data }) {
   return (
     <div className="bg-gray-50 p-4 rounded shadow space-y-4 sticky top-4">
       <h3 className="font-bold text-lg">{data.propertyName || "Property Details"}</h3>
 
+      {/* // Add to existing DashboardSidebar navigation */}
+<nav className="mt-5 px-2">
+  {/* Existing navigation */}
+  <Link href="/investors/portfolio" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+    📊 Portfolio Overview
+  </Link>
+  
+  {/* NEW: Deal Flow Navigation */}
+  <div className="mt-4">
+    <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+      Deal Engine
+    </h3>
+    <div className="mt-1 space-y-1">
+      <Link href="/investors/portfolio" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-blue-600 bg-blue-50">
+        🎯 New Deal Analysis
+      </Link>
+      <Link href="/investors/portfolio/deals" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+        📁 Saved Deals
+      </Link>
+      <Link href="/investors/portfolio/reports" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-50">
+        📈 Reports
+      </Link>
+    </div>
+  </div>
+  
+  {/* Existing transaction link */}
+  <Link href="/investors/transactions" className="group flex items-center px-2 py-2 text-sm font-medium rounded-md">
+    💰 Transactions
+  </Link>
+</nav>
       {step >= 2 && ( // Screening Step & beyond
         <div className="space-y-2">
           <h4 className="font-semibold text-gray-700">Property Snapshot</h4>
