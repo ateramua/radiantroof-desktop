@@ -1,6 +1,4 @@
 // app/layout.js
-"use client";
-
 import Header from "@/components/Header";
 import { AuthProvider } from "../context/AuthContext";
 import "./globals.css";
