@@ -11,11 +11,18 @@ const { prisma, testConnection } = require('./src/utils/prismaClient');
 
 const app = express();
 
-// CORS configuration - Updated for production
+// CORS configuration - Updated for production and local testing
 const corsOptions = {
   origin: process.env.CORS_ORIGIN 
     ? process.env.CORS_ORIGIN.split(',') 
-    : ['http://localhost:3000'],
+    : [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        'http://localhost:3003',
+        'https://uncomplementally-issueless-veronique.ngrok-free.app',
+        'https://www.radiantroofrealty.com'
+      ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
