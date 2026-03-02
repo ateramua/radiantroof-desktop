@@ -39,8 +39,8 @@ export default function DashboardLayout({ children }) {
       <aside className="w-64 bg-white shadow-lg flex flex-col">
         {/* Company Logo/Name */}
         <div className="p-4 border-b">
-          <h2 className="text-xl font-bold text-blue-600">RadiantRoof</h2>
-          <p className="text-sm text-gray-500">Fix & Flip Workflow</p>
+          <h2 className="text-xl font-bold text-blue-600">Radiant Roof</h2>
+          <p className="text-sm text-gray-500">Prosperity Workflow</p>
         </div>
         
         {/* User Info - Shows who's logged in */}

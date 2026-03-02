@@ -38,7 +38,7 @@ export default function InvestorLayout({ children }) {
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow-lg flex flex-col">
         <div className="p-4 border-b">
-          <h2 className="text-xl font-bold text-green-600">RadiantRoof</h2>
+          <h2 className="text-xl font-bold text-green-600">Radiant Roof Realty</h2>
           <p className="text-sm text-gray-500">Investor Portal</p>
         </div>
         

@@ -116,7 +116,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500 font-semibold mb-2">Demo Credentials:</p>
+          {/* <p className="text-xs text-gray-500 font-semibold mb-2">Demo Credentials:</p> */}
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="p-2 bg-blue-50 rounded">
               <p className="font-medium">Admin</p>

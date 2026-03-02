@@ -39,7 +39,12 @@ export default function Header() {
               Investors
             </Link>
 
-            {/* Quick Deal Calculator Button */}
+       
+            
+            <Link href="/contact" className="hover:text-blue-600 transition">
+              Contact
+            </Link>
+                 {/* Quick Deal Calculator Button */}
             <button
               onClick={() => setShowCalculator(true)} // ← This now works!
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all flex items-center space-x-2"
@@ -47,11 +52,6 @@ export default function Header() {
               <span>🧮</span>
               <span>Quick Deal Calculator</span>
             </button>
-            
-            <Link href="/contact" className="hover:text-blue-600 transition">
-              Contact
-            </Link>
-
             {/* Auth-based buttons */}
             {user ? (
               <>
