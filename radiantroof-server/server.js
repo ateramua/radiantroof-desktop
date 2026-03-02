@@ -20,12 +20,12 @@ const corsOptions = {
         'http://localhost:3001',
         'http://localhost:3002',
         'http://localhost:3003',
-        'https://uncomplementally-issueless-veronique.ngrok-free.app',
+        'https://uncomplementally-issueless-veronique.ngrok-free.dev',
         'https://www.radiantroofrealty.com'
       ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'ngrok-skip-browser-warning'] // THIS MUST BE THERE
 };
 
 app.use(cors(corsOptions));
