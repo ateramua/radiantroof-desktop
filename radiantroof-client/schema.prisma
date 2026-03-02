@@ -1,0 +1,60 @@
+// Add to existing schema.prisma
+
+model Deal {
+  id             String   @id @default(cuid())
+  userId         String?
+  propertyId     String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Inputs
+  arv            Float
+  repairCosts    Float
+  purchasePrice  Float
+  monthlyRent    Float
+  interestRate   Float
+  downPayment    Float
+  closingCosts   Float
+  
+  // Results
+  profit         Float
+  roi            Float
+  cashOnCash     Float
+  dscr           Float
+  capRate        Float
+  cashFlow       Float
+  dealScore      Int
+  riskLevel      String
+  
+  // Relationships
+  user           User?    @relation(fields: [userId], references: [id])
+  property       Property? @relation(fields: [propertyId], references: [id])
+  leads          Lead[]
+}
+
+model Lead {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String?
+  investorType   String?
+  createdAt      DateTime @default(now())
+  
+  // Deal reference
+  dealId         String?
+  deal           Deal?    @relation(fields: [dealId], references: [id])
+  
+  // Tracking
+  source         String?  // "deal_analyzer", "report_download", etc.
+  converted      Boolean  @default(false)
+}
+
+model Property {
+  id             String   @id @default(cuid())
+  address        String
+  city           String
+  state          String
+  zipCode        String
+  
+  // Existing fields...
+  deals          Deal[]
+}

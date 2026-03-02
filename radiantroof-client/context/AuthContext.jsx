@@ -4,61 +4,95 @@ import { createContext, useContext, useState, useEffect } from "react";
 import api from "../lib/api";
 import { jwtDecode } from "jwt-decode";
 
-const AuthContext = createContext();
+// Create the context
+const AuthContext = createContext(null);
 
-export const AuthProvider = ({ children }) => {
+// Provider component
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  
-const login = async (email, password) => {
-  try {
-    console.log('🔍 STEP 1: Login function called');
-    console.log('🔍 STEP 2: Email:', email);
-    console.log('🔍 STEP 3: Password length:', password?.length);
-    
-    // Check localStorage before login
-    const existingToken = localStorage.getItem("accessToken");
-    console.log('🔍 STEP 4: Existing token in localStorage:', existingToken ? 'Yes' : 'No');
-    
-    // Clear any existing token before login attempt
-    localStorage.removeItem("accessToken");
-    console.log('🔍 STEP 5: Cleared localStorage token');
-    
-    console.log('🔍 STEP 6: Making API request to /auth/login');
-    const res = await api.post("/auth/login", { email, password });
-    
-    console.log('🔍 STEP 7: API response received:', {
-      status: res.status,
-      hasData: !!res.data,
-      hasToken: !!res.data?.token
-    });
-    
-    const { token } = res.data;
-    if (!token) {
-      throw new Error("No token received from server");
+  const login = async (email, password) => {
+    try {
+      console.log('🔍 STEP 1: Login function called');
+      console.log('📧 Email being sent:', email);
+      console.log('🔑 Password being sent:', password ? '[REDACTED]' : 'empty');
+      
+      // Clear any existing token before login attempt
+      localStorage.removeItem("accessToken");
+      console.log('🔍 STEP 2: Cleared existing token');
+      
+      console.log('🔍 STEP 3: Making API request to /users/login');
+      console.log('🌐 API Base URL:', api.defaults.baseURL);
+      
+      // Make login request
+      const res = await api.post("/users/login", { email, password });
+      
+      console.log('✅ STEP 4: Response received!');
+      console.log('📦 Response status:', res.status);
+      console.log('📦 Response data:', JSON.stringify(res.data, null, 2));
+      
+      // Extract data from response - based on your curl output
+      const { token, user: userData } = res.data;
+      
+      console.log('🔍 STEP 5: Extracted token:', token ? '✅ Present' : '❌ Missing');
+      console.log('🔍 STEP 6: Extracted userData:', userData ? '✅ Present' : '❌ Missing');
+      
+      if (!token) {
+        console.error('❌ No token in response');
+        throw new Error("No token received from server");
+      }
+      
+      if (!userData) {
+        console.error('❌ No user data in response');
+        throw new Error("No user data received from server");
+      }
+      
+      // Store token
+      localStorage.setItem("accessToken", token);
+      console.log('🔍 STEP 7: Token stored in localStorage');
+      
+      // Create user object from the response
+      const fullUser = {
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        role: userData.role
+      };
+      
+      console.log('🔍 STEP 8: Setting user:', fullUser);
+      
+      // Update state
+      setUser(fullUser);
+      console.log('🔍 STEP 9: User state updated');
+      
+      return fullUser;
+      
+    } catch (err) {
+      console.error('❌ STEP ERROR: Login failed!');
+      console.error('Error object:', err);
+      
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        console.error('❌ Response status:', err.response.status);
+        console.error('❌ Response data:', JSON.stringify(err.response.data, null, 2));
+        
+        // Show the actual error message from server
+        const serverMessage = err.response.data?.message || err.response.data?.error || 'Invalid credentials';
+        throw new Error(serverMessage);
+        
+      } else if (err.request) {
+        // The request was made but no response was received
+        console.error('❌ No response received. Request:', err.request);
+        throw new Error('No response from server. Check if backend is running.');
+        
+      } else {
+        // Something happened in setting up the request
+        console.error('❌ Request setup error:', err.message);
+        throw err;
+      }
     }
-    
-    console.log('🔍 STEP 8: Token received, storing in localStorage');
-    localStorage.setItem("accessToken", token);
-    
-    const decoded = jwtDecode(token);
-    console.log('🔍 STEP 9: Token decoded:', decoded);
-    
-    setUser(decoded);
-    console.log('🔍 STEP 10: User state updated');
-    
-    return decoded;
-  } catch (err) {
-    console.error('🔴 ERROR STEP: Login failed');
-    console.error('🔴 Error name:', err.name);
-    console.error('🔴 Error message:', err.message);
-    console.error('🔴 Error response:', err.response?.data);
-    console.error('🔴 Error status:', err.response?.status);
-    console.error('🔴 Full error:', err);
-    throw err;
-  }
-};
+  };
 
   const logout = async () => {
     try {
@@ -71,40 +105,71 @@ const login = async (email, password) => {
     }
   };
 
+  // Check for existing token on page load
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
+    const initializeUser = async () => {
+      const token = localStorage.getItem("accessToken");
+      
+      if (!token) {
+        console.log('No token found, user not logged in');
+        setLoading(false);
+        return;
+      }
+
       try {
+        // Decode token to check expiration
         const decoded = jwtDecode(token);
-        // Check if token is expired
         const currentTime = Date.now() / 1000;
+        
         if (decoded.exp && decoded.exp < currentTime) {
           console.log("Token expired, logging out");
           localStorage.removeItem("accessToken");
           setUser(null);
-        } else {
-          setUser(decoded);
+          setLoading(false);
+          return;
         }
+
+        // ✅ FIXED: Use token data directly - NO API CALL
+        console.log('Using token data for user');
+        setUser({
+          id: decoded.id,
+          email: decoded.email,
+          role: decoded.role,
+          name: decoded.email?.split('@')[0] || "User"
+        });
+
       } catch (err) {
-        console.error("Invalid token, clearing localStorage:", err);
+        console.error("Invalid token:", err);
         localStorage.removeItem("accessToken");
         setUser(null);
       }
-    }
-    setLoading(false);
+      
+      setLoading(false);
+    };
+
+    initializeUser();
   }, []);
 
+  // Create the value object
+  const value = {
+    user,
+    login,
+    logout,
+    loading
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => {
+// Custom hook
+export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === null) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-};
+}

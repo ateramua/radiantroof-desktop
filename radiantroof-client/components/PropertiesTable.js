@@ -37,6 +37,39 @@ export default function PropertiesTable({
     return statusClasses[status] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
+  // Helper functions for decision display
+  const getScreeningStatusColor = (status) => {
+    const colors = {
+      'PASS': 'bg-red-100 text-red-700',
+      'INVESTIGATE': 'bg-green-100 text-green-700',
+      'FLAG': 'bg-yellow-100 text-yellow-700',
+      'REVIEW': 'bg-blue-100 text-blue-700'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-500';
+  };
+
+  const getAnalysisVerdictColor = (verdict) => {
+    const colors = {
+      'STRONG BUY': 'bg-green-100 text-green-700',
+      'BUY': 'bg-blue-100 text-blue-700',
+      'MAYBE': 'bg-yellow-100 text-yellow-700',
+      'PASS': 'bg-red-100 text-red-700',
+      'REJECT': 'bg-red-100 text-red-700'
+    };
+    return colors[verdict] || 'bg-gray-100 text-gray-500';
+  };
+
+  const getDecisionStatusColor = (status) => {
+    const colors = {
+      'UNDER_REVIEW': 'bg-blue-100 text-blue-700',
+      'OFFER_MADE': 'bg-yellow-100 text-yellow-700',
+      'PASS': 'bg-red-100 text-red-700',
+      'UNDER_CONTRACT': 'bg-green-100 text-green-700',
+      'WITHDRAWN': 'bg-gray-100 text-gray-700'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-500';
+  };
+
   return (
     <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-gray-100">
       <div className="overflow-x-auto">
@@ -159,59 +192,201 @@ export default function PropertiesTable({
                           </p>
                         </div>
 
-                        {/* Workflow Data */}
+                        {/* Enhanced Workflow Status Section */}
                         <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
                           <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
                             <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                             </svg>
-                            Workflow Status
+                            Investment Analysis
                           </h4>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500">Screening:</span>
-                              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                property.screening && Object.keys(property.screening).length > 0 
-                                  ? 'bg-green-100 text-green-700' 
-                                  : 'bg-gray-100 text-gray-500'
-                              }`}>
-                                {property.screening && Object.keys(property.screening).length > 0 ? '✓ Complete' : '○ Pending'}
-                              </span>
+                          
+                          <div className="space-y-4 text-sm">
+                            {/* Screening Status with Decision Data */}
+                            <div className="flex flex-col p-3 bg-gray-50 rounded-lg">
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-600 font-medium">Screening:</span>
+                                {property.screening && Object.keys(property.screening).length > 0 ? (
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getScreeningStatusColor(property.screening.status)}`}>
+                                    {property.screening.status || 'REVIEW'}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">Not started</span>
+                                )}
+                              </div>
+                              {property.screening?.score && (
+                                <div className="mt-2 flex justify-between items-center">
+                                  <span className="text-xs text-gray-500">Score:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-bold ${
+                                      property.screening.score >= 70 ? 'text-green-600' :
+                                      property.screening.score >= 50 ? 'text-yellow-600' : 'text-red-600'
+                                    }`}>
+                                      {property.screening.score}/100
+                                    </span>
+                                    <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                      <div 
+                                        className={`h-full ${
+                                          property.screening.score >= 70 ? 'bg-green-500' :
+                                          property.screening.score >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                                        }`}
+                                        style={{ width: `${property.screening.score}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              {property.screening?.recommendation && (
+                                <div className="mt-2 text-xs text-gray-600 bg-white p-2 rounded border border-gray-100">
+                                  💡 {property.screening.recommendation}
+                                </div>
+                              )}
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500">Analysis:</span>
-                              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                property.analysis && Object.keys(property.analysis).length > 0 
-                                  ? 'bg-green-100 text-green-700' 
-                                  : 'bg-gray-100 text-gray-500'
-                              }`}>
-                                {property.analysis && Object.keys(property.analysis).length > 0 ? '✓ Complete' : '○ Pending'}
-                              </span>
+
+                            {/* Analysis Status with Decision Data */}
+                            <div className="flex flex-col p-3 bg-gray-50 rounded-lg">
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-600 font-medium">Analysis:</span>
+                                {property.analysis && Object.keys(property.analysis).length > 0 ? (
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getAnalysisVerdictColor(property.analysis.verdict)}`}>
+                                    {property.analysis.verdict || 'REVIEW'}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">Not started</span>
+                                )}
+                              </div>
+                              {property.analysis?.dealScore && (
+                                <div className="mt-2 flex justify-between items-center">
+                                  <span className="text-xs text-gray-500">Deal Score:</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-bold ${
+                                      property.analysis.dealScore >= 80 ? 'text-green-600' :
+                                      property.analysis.dealScore >= 60 ? 'text-blue-600' :
+                                      property.analysis.dealScore >= 40 ? 'text-yellow-600' : 'text-red-600'
+                                    }`}>
+                                      {property.analysis.dealScore}/100
+                                    </span>
+                                    <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                      <div 
+                                        className={`h-full ${
+                                          property.analysis.dealScore >= 80 ? 'bg-green-500' :
+                                          property.analysis.dealScore >= 60 ? 'bg-blue-500' :
+                                          property.analysis.dealScore >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+                                        }`}
+                                        style={{ width: `${property.analysis.dealScore}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              {property.analysis?.reasoning && (
+                                <div className="mt-2 text-xs text-gray-600 bg-white p-2 rounded border border-gray-100">
+                                  💬 {property.analysis.reasoning}
+                                </div>
+                              )}
+                              {property.analysis?.maxAllowableOffer && (
+                                <div className="mt-2 text-xs text-gray-500">
+                                  MAO: {formatCurrency(property.analysis.maxAllowableOffer)}
+                                </div>
+                              )}
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500">Decision:</span>
-                              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                property.decision && Object.keys(property.decision).length > 0 
-                                  ? 'bg-green-100 text-green-700' 
-                                  : 'bg-gray-100 text-gray-500'
-                              }`}>
-                                {property.decision && Object.keys(property.decision).length > 0 ? '✓ Complete' : '○ Pending'}
-                              </span>
+
+                            {/* Decision Status */}
+                            <div className="flex flex-col p-3 bg-gray-50 rounded-lg">
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-600 font-medium">Decision:</span>
+                                {property.decision && Object.keys(property.decision).length > 0 ? (
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDecisionStatusColor(property.decision.status)}`}>
+                                    {property.decision.status?.replace('_', ' ') || 'PENDING'}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">Not started</span>
+                                )}
+                              </div>
+                              {property.decision?.offerDetails?.amount > 0 && (
+                                <div className="mt-2 flex justify-between items-center">
+                                  <span className="text-xs text-gray-500">Offer Amount:</span>
+                                  <span className="text-sm font-medium text-blue-600">
+                                    {formatCurrency(property.decision.offerDetails.amount)}
+                                  </span>
+                                </div>
+                              )}
+                              {property.decision?.negotiations?.length > 0 && (
+                                <div className="mt-2 text-xs text-gray-500">
+                                  Negotiation rounds: {property.decision.negotiations.length}
+                                </div>
+                              )}
+                              {property.decision?.finalDecision?.outcome && (
+                                <div className="mt-2 text-xs bg-blue-50 text-blue-700 p-2 rounded">
+                                  Final: {property.decision.finalDecision.outcome}
+                                  {property.decision.finalDecision.date && ` on ${new Date(property.decision.finalDecision.date).toLocaleDateString()}`}
+                                </div>
+                              )}
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-500">Acquisition:</span>
-                              <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                property.acquisition && Object.keys(property.acquisition).length > 0 
-                                  ? 'bg-green-100 text-green-700' 
-                                  : 'bg-gray-100 text-gray-500'
-                              }`}>
-                                {property.acquisition && Object.keys(property.acquisition).length > 0 ? '✓ Complete' : '○ Pending'}
-                              </span>
+
+                            {/* Acquisition Status */}
+                            <div className="flex flex-col p-3 bg-gray-50 rounded-lg">
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-600 font-medium">Acquisition:</span>
+                                {property.acquisition && Object.keys(property.acquisition).length > 0 ? (
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    property.acquisition.purchased ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                                  }`}>
+                                    {property.acquisition.purchased ? 'ACQUIRED' : 'PENDING'}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">Not started</span>
+                                )}
+                              </div>
+                              {property.acquisition?.finalPrice > 0 && (
+                                <div className="mt-2 flex justify-between items-center">
+                                  <span className="text-xs text-gray-500">Final Price:</span>
+                                  <span className="text-sm font-medium text-green-600">
+                                    {formatCurrency(property.acquisition.finalPrice)}
+                                  </span>
+                                </div>
+                              )}
+                              {property.acquisition?.offers?.length > 0 && (
+                                <div className="mt-2 text-xs text-gray-500">
+                                  Total offers: {property.acquisition.offers.length}
+                                </div>
+                              )}
+                              {property.acquisition?.actualVsProjected?.variance && (
+                                <div className="mt-2">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-xs text-gray-500">Variance:</span>
+                                    <span className={`text-xs font-medium ${
+                                      Math.abs(parseFloat(property.acquisition.actualVsProjected.variance)) > 10 
+                                        ? 'text-red-600' 
+                                        : 'text-green-600'
+                                    }`}>
+                                      {property.acquisition.actualVsProjected.variance}%
+                                    </span>
+                                  </div>
+                                  <div className="w-full h-1.5 bg-gray-200 rounded-full mt-1 overflow-hidden">
+                                    <div 
+                                      className={`h-full ${
+                                        Math.abs(parseFloat(property.acquisition.actualVsProjected.variance)) > 10 
+                                          ? 'bg-red-500' 
+                                          : 'bg-green-500'
+                                      }`}
+                                      style={{ 
+                                        width: `${Math.min(100, Math.abs(parseFloat(property.acquisition.actualVsProjected.variance)))}%` 
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                              {property.acquisition?.lessonLearned && (
+                                <div className="mt-2 text-xs bg-yellow-50 text-yellow-700 p-2 rounded">
+                                  📝 {property.acquisition.lessonLearned}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
 
-                        {/* Metadata */}
+                        {/* Metadata Section */}
                         <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 md:col-span-2">
                           <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
                             <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

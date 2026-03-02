@@ -34,6 +34,7 @@ const createProperty = async (req, res) => {
 };
 
 // Update property
+// Update property
 const updateProperty = async (req, res) => {
   const { id } = req.params;
   const { screening, analysis, decision, acquisition, ...otherFields } = req.body;
@@ -42,20 +43,21 @@ const updateProperty = async (req, res) => {
     const property = await Property.findByPk(id);
     if (!property) return res.status(404).json({ error: "Property not found" });
 
-    // Update nested acquisition workflow safely
-    const updatedAcquisition = { ...property.acquisition };
-    if (screening) updatedAcquisition.screening = screening;
-    if (analysis) updatedAcquisition.analysis = analysis;
-    if (decision) updatedAcquisition.decision = decision;
-    if (acquisition) updatedAcquisition.acquisition = acquisition;
+    // Create an object with only the fields that were sent
+    const fieldsToUpdate = { ...otherFields };
+    
+    // Only include fields that were actually provided in the request
+    if (screening !== undefined) fieldsToUpdate.screening = screening;
+    if (analysis !== undefined) fieldsToUpdate.analysis = analysis;
+    if (decision !== undefined) fieldsToUpdate.decision = decision;
+    if (acquisition !== undefined) fieldsToUpdate.acquisition = acquisition;
 
-    await property.update({
-      ...otherFields,
-      acquisition: updatedAcquisition,
-    });
+    // Update the property - each field goes to its OWN column
+    await property.update(fieldsToUpdate);
 
     res.json(property);
   } catch (err) {
+    console.error("Error updating property:", err);
     res.status(500).json({ error: err.message });
   }
 };
