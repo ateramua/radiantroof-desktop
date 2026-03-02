@@ -2,10 +2,11 @@ import axios from "axios";
 
 // Make sure this points to your backend
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5001/api",  // Your backend URL
+  baseURL: process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5001/api",
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'ngrok-skip-browser-warning': 'true'
   },
   timeout: 10000, // 10 second timeout
 });
