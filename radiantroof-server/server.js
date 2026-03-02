@@ -6,16 +6,22 @@ const session = require('express-session');
 // Load environment variables
 dotenv.config();
 
+// Import Prisma client
+const { prisma, testConnection } = require('./src/utils/prismaClient');
+
 const app = express();
 
-// CORS configuration
-app.use(cors({
-  origin: 'http://localhost:3000',
+// CORS configuration - Updated for production
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN 
+    ? process.env.CORS_ORIGIN.split(',') 
+    : ['http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
-}));
+};
 
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -28,6 +34,45 @@ app.use(session({
         maxAge: 1000 * 60 * 60 * 24 // 24 hours
     }
 }));
+
+// Make prisma available to routes (optional - can also import directly in routes)
+app.use((req, res, next) => {
+  req.prisma = prisma;
+  next();
+});
+
+// ============================================
+// HEALTH CHECK ENDPOINT (important for Render)
+// ============================================
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date(),
+    environment: process.env.NODE_ENV,
+    database: 'connected'
+  });
+});
+
+// ============================================
+// TEST DATABASE ENDPOINT
+// ============================================
+app.get('/api/test-db', async (req, res) => {
+  try {
+    // Try to query the database
+    const result = await prisma.$queryRaw`SELECT NOW() as current_time`;
+    res.json({ 
+      success: true, 
+      message: 'Database connected',
+      time: result[0]
+    });
+  } catch (error) {
+    console.error('Database test failed:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Database connection failed' 
+    });
+  }
+});
 
 // ============================================
 // IMPORT ROUTES
@@ -57,7 +102,13 @@ app.use((req, res) => {
     res.status(404).json({ error: `Cannot ${req.method} ${req.url}` });
 });
 
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
+// Test database connection on startup
+testConnection().then(() => {
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT}`);
+    console.log(`🌎 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+    console.log(`🗄️  Test DB: http://localhost:${PORT}/api/test-db`);
+  });
 });
