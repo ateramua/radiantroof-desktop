@@ -91,18 +91,16 @@ export default function LoginPage() {
         <form onSubmit={handleLogin} className="flex flex-col gap-5">
           <input
             type="email"
-            placeholder="Email"
-            value=""
-            defaultValue="" 
+            placeholder=""
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="border border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />
           <input
             type="password"
-            placeholder="Password"
-            value=""
-            defaultValue="" 
+            placeholder=""
+            value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="border border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400"
             required
