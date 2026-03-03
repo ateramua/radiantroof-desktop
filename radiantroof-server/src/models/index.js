@@ -9,6 +9,12 @@ const sequelize = new Sequelize({
   username: config.database.user,
   password: config.database.password,
   logging: false,
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false // Important for Render
+    }
+  }
 });
 
 // Initialize models
