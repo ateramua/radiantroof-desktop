@@ -36,7 +36,7 @@ const User = db.sequelize.define('User', {
     defaultValue: DataTypes.NOW
   }
 }, {
-  tableName: 'Users',        // CRITICAL - matches your database
+  tableName: 'Users',
   timestamps: true
 });
 

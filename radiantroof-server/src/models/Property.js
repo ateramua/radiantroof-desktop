@@ -3,9 +3,9 @@ const db = require("./index");
 
 const Property = db.sequelize.define('Property', {
   // ========== BASIC PROPERTY INFO ==========
-  address: { 
-    type: DataTypes.STRING, 
-    allowNull: false 
+  address: {
+    type: DataTypes.STRING,
+    allowNull: false
   },
   city: {
     type: DataTypes.STRING,
@@ -19,37 +19,37 @@ const Property = db.sequelize.define('Property', {
     type: DataTypes.STRING(10),
     allowNull: true
   },
-  country: { 
-    type: DataTypes.STRING, 
+  country: {
+    type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: "USA" 
+    defaultValue: "USA"
   },
-  description: { 
+  description: {
     type: DataTypes.TEXT,
-    allowNull: true 
+    allowNull: true
   },
-  price: { 
-    type: DataTypes.FLOAT, 
-    allowNull: false 
+  price: {
+    type: DataTypes.FLOAT,
+    allowNull: false
   },
-  photo: { 
+  photo: {
     type: DataTypes.STRING,
     allowNull: true
   },
-  
+
   // ========== PROPERTY STATUS ==========
   status: {
     type: DataTypes.STRING,
     defaultValue: "Available"
   },
-  
+
   // ========== WORKFLOW STAGE ==========
   workflowStage: {
     type: DataTypes.STRING,
     defaultValue: "source",
     allowNull: false
   },
-  
+
   // ========== SOURCE INFORMATION ==========
   sourceType: {
     type: DataTypes.STRING,
@@ -68,7 +68,7 @@ const Property = db.sequelize.define('Property', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  
+
   // ========== COUNTY RECORDS SPECIFIC ==========
   countySource: {
     type: DataTypes.STRING,
@@ -94,7 +94,7 @@ const Property = db.sequelize.define('Property', {
     type: DataTypes.STRING,
     allowNull: true
   },
-  
+
   // ========== FINANCIALS FROM COUNTY ==========
   assessedValue: {
     type: DataTypes.FLOAT,
@@ -112,7 +112,7 @@ const Property = db.sequelize.define('Property', {
     type: DataTypes.DATE,
     allowNull: true
   },
-  
+
   // ========== TAX INFORMATION ==========
   taxDelinquent: {
     type: DataTypes.BOOLEAN,
@@ -126,7 +126,7 @@ const Property = db.sequelize.define('Property', {
     type: DataTypes.INTEGER,
     allowNull: true
   },
-  
+
   // ========== PROPERTY CHARACTERISTICS ==========
   yearBuilt: {
     type: DataTypes.INTEGER,
@@ -148,7 +148,7 @@ const Property = db.sequelize.define('Property', {
     type: DataTypes.FLOAT,
     allowNull: true
   },
-  
+
   // ========== DEAL METRICS (CALCULATED) ==========
   askingPrice: {
     type: DataTypes.FLOAT,
@@ -182,23 +182,23 @@ const Property = db.sequelize.define('Property', {
     type: DataTypes.STRING,
     defaultValue: 'cold'
   },
-  
+
   // ========== WORKFLOW-SPECIFIC FIELDS (AS JSON) ==========
-  screening: { 
-    type: DataTypes.JSON, 
-    defaultValue: {} 
+  screening: {
+    type: DataTypes.JSON,
+    defaultValue: {}
   },
-  analysis: { 
-    type: DataTypes.JSON, 
-    defaultValue: {} 
+  analysis: {
+    type: DataTypes.JSON,
+    defaultValue: {}
   },
-  decision: { 
-    type: DataTypes.JSON, 
-    defaultValue: {} 
+  decision: {
+    type: DataTypes.JSON,
+    defaultValue: {}
   },
-  acquisition: { 
-    type: DataTypes.JSON, 
-    defaultValue: {} 
+  acquisition: {
+    type: DataTypes.JSON,
+    defaultValue: {}
   },
   renovation: {
     type: DataTypes.JSON,
@@ -208,7 +208,7 @@ const Property = db.sequelize.define('Property', {
     type: DataTypes.JSON,
     defaultValue: {}
   },
-  
+
   // ========== TIMELINE ==========
   lastContacted: {
     type: DataTypes.DATE,
@@ -218,7 +218,7 @@ const Property = db.sequelize.define('Property', {
     type: DataTypes.DATE,
     allowNull: true
   },
-  
+
   // ========== TAGS & NOTES ==========
   tags: {
     type: DataTypes.JSON,
