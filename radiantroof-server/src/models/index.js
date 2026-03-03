@@ -12,12 +12,12 @@ const sequelize = new Sequelize({
   dialectOptions: {
     ssl: {
       require: true,
-      rejectUnauthorized: false // Important for Render
+      rejectUnauthorized: false
     }
   }
 });
 
-// Initialize models
+// Initialize models AFTER sequelize is defined
 const Property = require("./Property")(sequelize, DataTypes);
 const User = require("./User")(sequelize, DataTypes);
 
