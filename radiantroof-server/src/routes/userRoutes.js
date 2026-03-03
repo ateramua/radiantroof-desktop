@@ -10,6 +10,9 @@ router.get('/test', (req, res) => {
   res.json({ message: 'User routes are working' });
 });
 
+// Add the missing register route
+router.post('/register', userController.register);  // <-- ADD THIS LINE
+
 // User routes
 router.post('/', userController.createUser);  // CREATE
 router.get('/', userController.getUsers);      // READ ALL

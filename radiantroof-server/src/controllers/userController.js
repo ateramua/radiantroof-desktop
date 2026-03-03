@@ -53,6 +53,11 @@ const createUser = async (req, res) => {
         required: ['name', 'email', 'password']
       });
     }
+    // Register user (uses createUser logic)
+const register = async (req, res) => {
+  // Reuse the existing createUser function
+  return createUser(req, res);
+};
     
     // Check if user exists
     const existingUser = await User.findOne({ where: { email } });
@@ -194,5 +199,6 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
-  loginUser
+  loginUser,
+  register  
 };
