@@ -1,14 +1,14 @@
 const { Sequelize, DataTypes } = require("sequelize");
-const config = require("../../config/config");
 
+// Use environment variables directly, with fallbacks for safety
 const sequelize = new Sequelize({
   dialect: "postgres",
-  host: config.database.host,
-  port: config.database.port,
-  database: config.database.name,
-  username: config.database.user,
-  password: config.database.password,
-  logging: false,
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT || 5432,
+  database: process.env.DB_NAME,
+  username: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  logging: console.log, // Temporarily enable logging to see queries
   dialectOptions: {
     ssl: {
       require: true,
@@ -17,11 +17,20 @@ const sequelize = new Sequelize({
   }
 });
 
-// Initialize models AFTER sequelize is defined
+// Test the connection immediately
+sequelize
+  .authenticate()
+  .then(() => {
+    console.log('✅ Database connection established successfully.');
+  })
+  .catch(err => {
+    console.error('❌ Unable to connect to the database:', err);
+  });
+
+// Initialize models
 const Property = require("./Property")(sequelize, DataTypes);
 const User = require("./User")(sequelize, DataTypes);
 
-// Export an object containing Sequelize instance and models
 const db = {
   sequelize,
   Sequelize,
