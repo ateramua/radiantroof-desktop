@@ -93,6 +93,7 @@ export default function LoginPage() {
             type="email"
             placeholder="Email"
             value=""
+            defaultValue="" 
             onChange={(e) => setEmail(e.target.value)}
             className="border border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
@@ -101,6 +102,7 @@ export default function LoginPage() {
             type="password"
             placeholder="Password"
             value=""
+            defaultValue="" 
             onChange={(e) => setPassword(e.target.value)}
             className="border border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:ring-2 focus:ring-purple-400"
             required
