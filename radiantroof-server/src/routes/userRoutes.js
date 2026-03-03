@@ -11,7 +11,7 @@ router.get('/test', (req, res) => {
 });
 
 // Add the missing register route
-router.post('/register', userController.register);  // <-- ADD THIS LINE
+router.post('/register', userController.create);  // <-- ADD THIS LINE
 
 // User routes
 router.post('/', userController.createUser);  // CREATE
