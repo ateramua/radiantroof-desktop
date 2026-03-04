@@ -2,7 +2,7 @@
 
 import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Footer from "@/components/Footer";
 import DashboardSidebar from "@/components/DashboardSidebar";
@@ -86,6 +86,7 @@ const StatsCard = ({ title, value, icon, trend, color = "blue" }) => {
 export default function AdminLayout({ children }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activePath, setActivePath] = useState('/admin');
@@ -108,8 +109,8 @@ export default function AdminLayout({ children }) {
 
   // Set active path based on current route
   useEffect(() => {
-    setActivePath(window.location.pathname);
-  }, []);
+    setActivePath(pathname);
+  }, [pathname]);
 
   useEffect(() => {
     if (!loading) {
@@ -142,6 +143,9 @@ export default function AdminLayout({ children }) {
   if (!user || user.role !== 'admin') {
     return null;
   }
+
+  // Check if we're on the main dashboard page
+  const isMainDashboard = pathname === '/admin';
 
   return (
     <div className="min-h-screen flex bg-gray-50/50 relative">
@@ -221,8 +225,8 @@ export default function AdminLayout({ children }) {
           </div>
         </header>
 
-        {/* Quick Stats Dashboard (only show on main admin page) */}
-        {children?.props?.children?.type?.name === 'AdminDashboard' && (
+        {/* Quick Stats Dashboard - Only show on main admin page */}
+        {isMainDashboard && (
           <div className="px-6 py-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatsCard 
