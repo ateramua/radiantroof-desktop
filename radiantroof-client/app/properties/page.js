@@ -13,6 +13,17 @@ export default function PropertiesPage() {
     pending: false,
     sold: false
   });
+  //remove later
+  useEffect(() => {
+  console.log("🔹 Production API Base URL:", process.env.NEXT_PUBLIC_API_BASE);
+  console.log("🔹 Access Token:", localStorage.getItem("accessToken"));
+
+  getProperties()
+    .then((data) => console.log("🔹 getProperties data:", data))
+    .catch((err) => console.error("🔹 getProperties error:", err));
+}, []);
+  //remove later
+  
 
   // Fetch properties on component mount
   useEffect(() => {
