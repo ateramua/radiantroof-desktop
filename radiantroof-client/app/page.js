@@ -87,13 +87,13 @@ const FloatingParticles = () => {
 // Spiritual Quote Carousel
 const SpiritualQuote = ({ quote, index, isActive }) => {
   const themeColors = {
-    gratitude: "from-amber-400 to-orange-500",
-    peace: "from-blue-400 to-cyan-500",
-    love: "from-rose-400 to-pink-500",
-    heart: "from-red-400 to-rose-500",
-    safety: "from-emerald-400 to-teal-500",
-    faith: "from-purple-400 to-indigo-500",
-    blessing: "from-yellow-400 to-amber-500"
+    gratitude: "text-white",
+    peace: "text-white",
+    love: "text-white",
+    heart: "text-white",
+    safety: "text-white",
+    faith: "text-white",
+    blessing: "text-white"
   };
 
   const color = themeColors[quote.theme] || "from-blue-400 to-purple-500";
@@ -106,7 +106,7 @@ const SpiritualQuote = ({ quote, index, isActive }) => {
         {/* Decorative elements */}
         <div className="relative mb-8">
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-32 h-32 bg-gradient-to-r from-yellow-300/20 to-amber-300/20 rounded-full blur-3xl"></div>
+            <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-green-900 via-emerald-800 to-green-600"></div>
           </div>
           <span className="relative text-6xl text-yellow-500/50">"</span>
         </div>
@@ -118,11 +118,11 @@ const SpiritualQuote = ({ quote, index, isActive }) => {
 
         {/* Source with decorative line */}
         <div className="flex items-center justify-center space-x-4">
-          <div className="w-12 h-px bg-gradient-to-r from-transparent to-gray-400"></div>
+          <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-green-900 via-emerald-800 to-green-600"></div>
           <p className="text-lg text-gray-500 font-medium italic">
             — {quote.source}
           </p>
-          <div className="w-12 h-px bg-gradient-to-l from-transparent to-gray-400"></div>
+          <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-green-900 via-emerald-800 to-green-600"></div>
         </div>
 
         {/* Floating spiritual symbols */}
@@ -182,7 +182,7 @@ const MeditationBell = () => {
 // Spiritual blessing cards
 const BlessingCard = ({ title, blessing, icon }) => (
   <div className="group relative bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-    <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-amber-500/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-green-900 via-emerald-800 to-green-600"></div>
     <div className="relative">
       <div className="text-4xl mb-4 transform group-hover:rotate-12 transition-transform duration-300">{icon}</div>
       <h3 className="text-xl font-semibold text-gray-800 mb-2">{title}</h3>
@@ -206,7 +206,7 @@ export default function Home() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
+    <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-green-900 via-emerald-800 to-green-600">
       {/* Animated background layers - fixed SVG */}
       <div className="absolute inset-0 opacity-20"
         style={{
@@ -216,9 +216,9 @@ export default function Home() {
       </div>
 
       {/* Gradient orbs */}
-      <div className="absolute top-0 -left-40 w-80 h-80 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-0 -right-40 w-80 h-80 bg-gradient-to-br from-blue-500/30 to-cyan-500/30 rounded-full blur-3xl animate-pulse delay-1000"></div>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-yellow-500/20 to-amber-500/20 rounded-full blur-3xl animate-pulse delay-2000"></div>
+      <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-green-900 via-emerald-800 to-green-600"></div>
+      <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-green-900 via-emerald-800 to-green-600"></div>
+      <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-green-900 via-emerald-800 to-green-600"></div>
 
       <FloatingParticles />
       <LotusBackground />
