@@ -41,7 +41,7 @@ export default function InvestorLayout({ children }) {
           <h2 className="text-xl font-bold text-green-600">Radiant Roof Realty</h2>
           <p className="text-sm text-gray-500">Investor Portal</p>
         </div>
-        
+
         {/* Investor Info */}
         <div className="p-4 border-b bg-green-50">
           <div className="flex items-center space-x-2">
@@ -58,44 +58,44 @@ export default function InvestorLayout({ children }) {
             </div>
           </div>
         </div>
-        
+
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
           <div className="px-4 space-y-1">
-            <Link 
-              href="/investor" 
+            <Link
+              href="/investor"
               className="flex items-center space-x-2 p-2 rounded bg-green-50 text-green-700 font-medium transition"
             >
               <span>💰</span>
               <span>Dashboard</span>
             </Link>
-            
-            <Link 
-              href="/investor/portfolio" 
+
+            <Link
+              href="/investor/portfolio"
               className="flex items-center space-x-2 p-2 rounded hover:bg-green-50 text-gray-700 hover:text-green-600 transition"
             >
               <span>📊</span>
               <span>My Portfolio</span>
             </Link>
-            
-            <Link 
-              href="/investor/properties" 
+
+            <Link
+              href="/investor/properties"
               className="flex items-center space-x-2 p-2 rounded hover:bg-green-50 text-gray-700 hover:text-green-600 transition"
             >
               <span>🏘️</span>
               <span>Funded Properties</span>
             </Link>
-            
-            <Link 
-              href="/investor/returns" 
+
+            <Link
+              href="/investor/returns"
               className="flex items-center space-x-2 p-2 rounded hover:bg-green-50 text-gray-700 hover:text-green-600 transition"
             >
               <span>📈</span>
               <span>Returns & Projections</span>
             </Link>
-            
-            <Link 
-              href="/investor/communications" 
+
+            <Link
+              href="/investor/communications"
               className="flex items-center space-x-2 p-2 rounded hover:bg-green-50 text-gray-700 hover:text-green-600 transition"
             >
               <span>💬</span>
@@ -108,15 +108,15 @@ export default function InvestorLayout({ children }) {
                 <div className="pt-4 mt-4 border-t">
                   <p className="px-2 text-xs font-semibold text-gray-400 uppercase">Admin Access</p>
                 </div>
-                <Link 
-                  href="/dashboard" 
+                <Link
+                  href="/dashboard"
                   className="flex items-center space-x-2 p-2 rounded hover:bg-blue-50 text-gray-700 hover:text-blue-600 transition"
                 >
                   <span>🏠</span>
                   <span>Workflow Dashboard</span>
                 </Link>
-                <Link 
-                  href="/admin" 
+                <Link
+                  href="/admin"
                   className="flex items-center space-x-2 p-2 rounded hover:bg-purple-50 text-gray-700 hover:text-purple-600 transition"
                 >
                   <span>⚙️</span>
@@ -126,10 +126,10 @@ export default function InvestorLayout({ children }) {
             )}
           </div>
         </nav>
-        
+
         {/* Logout */}
         <div className="p-4 border-t">
-          <button 
+          <button
             onClick={() => router.push('/logout')}
             className="flex items-center space-x-2 p-2 w-full rounded hover:bg-red-50 text-gray-700 hover:text-red-600 transition"
           >
@@ -149,6 +149,23 @@ export default function InvestorLayout({ children }) {
                 Track your investments and returns
               </p>
             </div>
+            <div className="p-4 border-b bg-gray-50">
+              <Link
+                href="/"
+                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white text-gray-700 hover:text-green-600 transition group"
+              >
+                <svg
+                  className="w-5 h-5 group-hover:-translate-x-1 transition-transform"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span className="font-medium">← Back to Home</span>
+              </Link>
+            </div>
+
             <div className="flex items-center space-x-4">
               <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
                 {user?.role === 'admin' ? 'Admin View' : 'Investor'}

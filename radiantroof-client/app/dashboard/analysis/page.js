@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import Link from "next/link";
 
-// Formula Explainer Component
+// Formula Explainer Component (keeping existing)
 const FormulaExplainer = ({ title, formula, value, status, color }) => (
   <div className="bg-white rounded-lg shadow-sm p-4">
     <h3 className="text-sm font-medium text-gray-500 mb-1">{title}</h3>
@@ -22,7 +22,7 @@ const FormulaExplainer = ({ title, formula, value, status, color }) => (
   </div>
 );
 
-// Parameter Score Component
+// Parameter Score Component (keeping existing)
 const ParameterScore = ({ label, value, weight, score, onChange }) => (
   <div className="mb-3">
     <div className="flex justify-between items-center mb-1">
@@ -51,6 +51,70 @@ const ParameterScore = ({ label, value, weight, score, onChange }) => (
   </div>
 );
 
+// NEW: Detailed Repair Summary Component
+const DetailedRepairSummary = ({ repairData }) => {
+  if (!repairData) return null;
+
+  const majorSystemsTotal = Object.values(repairData.majorSystems || {}).reduce((sum, item) => sum + item.cost, 0);
+  const roomsTotal = Object.values(repairData.rooms || {}).reduce((sum, item) => sum + item.cost, 0);
+  const quickEstimate = majorSystemsTotal + roomsTotal;
+  const finalBudget = quickEstimate * (1 + (repairData.contingencyPercent || 15) / 100);
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
+      <h3 className="text-lg font-semibold mb-3">🔨 Detailed Repair Breakdown</h3>
+      
+      <div className="space-y-3">
+        {/* Major Systems */}
+        <div>
+          <h4 className="text-sm font-medium text-gray-600 mb-2">Major Systems</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(repairData.majorSystems || {}).map(([system, data]) => (
+              data.cost > 0 && (
+                <div key={system} className="flex justify-between text-sm">
+                  <span className="capitalize text-gray-500">{system}:</span>
+                  <span className="font-medium">${data.cost.toLocaleString()}</span>
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+
+        {/* Room Finishes */}
+        <div className="border-t pt-2">
+          <h4 className="text-sm font-medium text-gray-600 mb-2">Room Finishes</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(repairData.rooms || {}).map(([room, data]) => (
+              data.cost > 0 && (
+                <div key={room} className="flex justify-between text-sm">
+                  <span className="capitalize text-gray-500">{room.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                  <span className="font-medium">${data.cost.toLocaleString()}</span>
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+
+        {/* Totals */}
+        <div className="border-t pt-3 mt-2">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-500">Quick Estimate:</span>
+            <span className="font-medium">${quickEstimate.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-500">Contingency ({repairData.contingencyPercent || 15}%):</span>
+            <span className="font-medium">${(finalBudget - quickEstimate).toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between items-center text-base font-bold mt-2">
+            <span>Final Repair Budget:</span>
+            <span className="text-blue-600">${finalBudget.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function AnalysisPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("calculator");
@@ -58,7 +122,37 @@ export default function AnalysisPage() {
   // Property Details
   const [purchasePrice, setPurchasePrice] = useState(275000);
   const [arv, setArv] = useState(425000);
-  const [repairCosts, setRepairCosts] = useState(45000);
+  
+  // NEW: Replace simple repairCosts with detailed repair data
+  const [repairData, setRepairData] = useState({
+    majorSystems: {
+      roof: { condition: "Fair", cost: 8000 },
+      hvac: { condition: "Good", cost: 0 },
+      electrical: { condition: "Poor", cost: 12000 },
+      plumbing: { condition: "Good", cost: 0 },
+      foundation: { condition: "Good", cost: 0 }
+    },
+    rooms: {
+      kitchen: { condition: "Full Gut", cost: 25000 },
+      bathroom1: { condition: "Full Gut", cost: 12000 },
+      bathroom2: { condition: "Cosmetic", cost: 5000 },
+      bedrooms: { condition: "Paint/Flooring", cost: 8000 },
+      living: { condition: "Paint/Flooring", cost: 4000 },
+      basement: { condition: "Waterproofing", cost: 6000 }
+    },
+    contingencyPercent: 15
+  });
+
+  // Calculate total repair costs from detailed data
+  const calculateRepairTotal = () => {
+    const majorSystemsTotal = Object.values(repairData.majorSystems).reduce((sum, item) => sum + item.cost, 0);
+    const roomsTotal = Object.values(repairData.rooms).reduce((sum, item) => sum + item.cost, 0);
+    return majorSystemsTotal + roomsTotal;
+  };
+
+  const repairCosts = calculateRepairTotal();
+  const repairCostsWithContingency = repairCosts * (1 + repairData.contingencyPercent / 100);
+
   const [holdingCosts, setHoldingCosts] = useState(8400);
   const [closingCosts, setClosingCosts] = useState(18500);
   const [financingRate, setFinancingRate] = useState(10.5);
@@ -90,7 +184,7 @@ export default function AnalysisPage() {
   // ============= REAL-TIME CALCULATIONS =============
   
   // 1. ROI Calculation
-  const totalCashInvested = purchasePrice + repairCosts + holdingCosts + closingCosts;
+  const totalCashInvested = purchasePrice + repairCostsWithContingency + holdingCosts + closingCosts;
   const loanAmount = purchasePrice * 0.9; // 90% LTV
   const pointsCost = loanAmount * (financingPoints / 100);
   const monthlyInterest = (loanAmount * (financingRate / 100)) / 12;
@@ -110,7 +204,7 @@ export default function AnalysisPage() {
   
   // 2. MAO (Maximum Allowable Offer) Calculation
   const desiredProfit = 40000; // Target profit
-  const mao = arv - repairCosts - desiredProfit;
+  const mao = arv - repairCostsWithContingency - desiredProfit;
   
   // MAO Status
   const getMaoStatus = () => {
@@ -161,6 +255,9 @@ export default function AnalysisPage() {
     return { text: 'Pass', color: '#ef4444', bg: 'bg-red-100' };
   };
 
+  // 5. NEW: Repair to ARV Ratio
+  const repairToArvRatio = (repairCostsWithContingency / arv * 100).toFixed(1);
+
   // Comps data
   const comps = [
     { id: 1, address: "123 Main St", soldPrice: 425000, soldDate: "2024-01-15", sqft: 1850, pricePerSqft: 230 },
@@ -195,7 +292,7 @@ export default function AnalysisPage() {
       </div>
 
       {/* Real-Time Metrics Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <FormulaExplainer 
           title="ROI" 
           formula="Profit ÷ Total Cash Invested × 100"
@@ -224,6 +321,14 @@ export default function AnalysisPage() {
           status={getDealScoreStatus().text}
           color={getDealScoreStatus().color}
         />
+        {/* NEW: Repair Ratio Metric */}
+        <FormulaExplainer 
+          title="Repair/ARV" 
+          formula="Repair Cost ÷ ARV"
+          value={`${repairToArvRatio}%`}
+          status={repairToArvRatio < 15 ? 'Excellent' : repairToArvRatio < 25 ? 'Good' : 'High'}
+          color={repairToArvRatio < 15 ? '#10b981' : repairToArvRatio < 25 ? '#3b82f6' : '#f59e0b'}
+        />
       </div>
 
       {/* Tabs */}
@@ -238,6 +343,16 @@ export default function AnalysisPage() {
             }`}
           >
             📊 Deal Calculator
+          </button>
+          <button
+            onClick={() => setActiveTab("repairs")}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === "repairs"
+                ? "border-blue-500 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            🔨 Detailed Repairs
           </button>
           <button
             onClick={() => setActiveTab("comps")}
@@ -280,6 +395,23 @@ export default function AnalysisPage() {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-lg font-semibold mb-4">Deal Calculator</h2>
               
+              {/* NEW: Show repair summary inline */}
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Repair Budget (from detailed assessment):</span>
+                  <span className="text-xl font-bold text-blue-600">${repairCostsWithContingency.toLocaleString()}</span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Includes {repairData.contingencyPercent}% contingency | Base repairs: ${repairCosts.toLocaleString()}
+                </p>
+                <button 
+                  onClick={() => setActiveTab("repairs")}
+                  className="text-sm text-blue-600 hover:underline mt-2"
+                >
+                  View detailed breakdown →
+                </button>
+              </div>
+              
               <div className="grid grid-cols-2 gap-6">
                 {/* Left Column Inputs */}
                 <div className="space-y-4">
@@ -304,19 +436,6 @@ export default function AnalysisPage() {
                         type="number"
                         value={arv}
                         onChange={(e) => setArv(Number(e.target.value))}
-                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-gray-500 mb-1">Repair Costs</label>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-400">$</span>
-                      <input
-                        type="number"
-                        value={repairCosts}
-                        onChange={(e) => setRepairCosts(Number(e.target.value))}
                         className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
                       />
                     </div>
@@ -370,32 +489,153 @@ export default function AnalysisPage() {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2"
                       />
                   </div>
+                </div>
+              </div>
 
-                  {/* DSCR Inputs */}
-                  <div className="border-t pt-4 mt-2">
-                    <h3 className="font-medium mb-3">Rental Income (for DSCR)</h3>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm text-gray-500 mb-1">Monthly Rent</label>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-gray-400">$</span>
-                          <input
-                            type="number"
-                            value={monthlyRent}
-                            onChange={(e) => setMonthlyRent(Number(e.target.value))}
-                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
-                          />
-                        </div>
+              {/* DSCR Inputs - moved outside the grid for better spacing */}
+              <div className="border-t pt-4 mt-4">
+                <h3 className="font-medium mb-3">Rental Income (for DSCR)</h3>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm text-gray-500 mb-1">Monthly Rent</label>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-400">$</span>
+                      <input
+                        type="number"
+                        value={monthlyRent}
+                        onChange={(e) => setMonthlyRent(Number(e.target.value))}
+                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-500 mb-1">Vacancy Rate (%)</label>
+                    <input
+                      type="number"
+                      value={vacancyRate}
+                      onChange={(e) => setVacancyRate(Number(e.target.value))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* NEW: Detailed Repairs Tab */}
+          {activeTab === "repairs" && (
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-lg font-semibold mb-4">🔨 Detailed Repair Assessment</h2>
+              
+              <div className="space-y-6">
+                {/* Major Systems */}
+                <div>
+                  <h3 className="font-medium text-gray-700 mb-3">Major Systems</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(repairData.majorSystems).map(([system, data]) => (
+                      <div key={system} className="border rounded-lg p-3">
+                        <label className="block text-sm font-medium text-gray-600 capitalize mb-2">
+                          {system}
+                        </label>
+                        <select 
+                          value={data.condition}
+                          onChange={(e) => {
+                            const condition = e.target.value;
+                            const cost = condition === 'New' ? 0 :
+                                        condition === 'Good' ? 0 :
+                                        condition === 'Fair' ? 5000 :
+                                        condition === 'Poor' ? 8000 : 12000;
+                            setRepairData(prev => ({
+                              ...prev,
+                              majorSystems: {
+                                ...prev.majorSystems,
+                                [system]: { condition, cost }
+                              }
+                            }));
+                          }}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        >
+                          <option value="New">New</option>
+                          <option value="Good">Good</option>
+                          <option value="Fair">Fair (+$5k)</option>
+                          <option value="Poor">Poor (+$8k)</option>
+                          <option value="Replace">Replace (+$12k)</option>
+                        </select>
                       </div>
-                      <div>
-                        <label className="block text-sm text-gray-500 mb-1">Vacancy Rate (%)</label>
-                        <input
-                          type="number"
-                          value={vacancyRate}
-                          onChange={(e) => setVacancyRate(Number(e.target.value))}
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                        />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Room Finishes */}
+                <div className="border-t pt-4">
+                  <h3 className="font-medium text-gray-700 mb-3">Room Finishes</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(repairData.rooms).map(([room, data]) => (
+                      <div key={room} className="border rounded-lg p-3">
+                        <label className="block text-sm font-medium text-gray-600 capitalize mb-2">
+                          {room.replace(/([A-Z])/g, ' $1').trim()}
+                        </label>
+                        <select 
+                          value={data.condition}
+                          onChange={(e) => {
+                            const condition = e.target.value;
+                            const cost = condition === 'New' ? 0 :
+                                        condition === 'Cosmetic' ? 5000 :
+                                        condition === 'Paint/Flooring' ? 8000 :
+                                        condition === 'Partial Gut' ? 15000 : 25000;
+                            setRepairData(prev => ({
+                              ...prev,
+                              rooms: {
+                                ...prev.rooms,
+                                [room]: { condition, cost }
+                              }
+                            }));
+                          }}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        >
+                          <option value="New">New</option>
+                          <option value="Cosmetic">Cosmetic (+$5k)</option>
+                          <option value="Paint/Flooring">Paint/Flooring (+$8k)</option>
+                          <option value="Partial Gut">Partial Gut (+$15k)</option>
+                          <option value="Full Gut">Full Gut (+$25k)</option>
+                        </select>
                       </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Contingency Slider */}
+                <div className="border-t pt-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="font-medium">Contingency Percentage</label>
+                    <span className="text-lg font-bold text-blue-600">{repairData.contingencyPercent}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="5"
+                    max="25"
+                    step="1"
+                    value={repairData.contingencyPercent}
+                    onChange={(e) => setRepairData(prev => ({ ...prev, contingencyPercent: Number(e.target.value) }))}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>5% (Low Risk)</span>
+                    <span>15% (Standard)</span>
+                    <span>25% (High Risk)</span>
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm text-gray-600">Base Repair Estimate</p>
+                      <p className="text-2xl font-bold text-blue-600">${repairCosts.toLocaleString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600">With Contingency</p>
+                      <p className="text-2xl font-bold text-green-600">${repairCostsWithContingency.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
@@ -643,8 +883,16 @@ export default function AnalysisPage() {
                   <span className="font-semibold text-green-600">${arv.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Total Investment</span>
-                  <span className="font-medium">${totalCashInvested.toLocaleString()}</span>
+                  <span className="text-gray-500">Purchase Price</span>
+                  <span className="font-medium">${purchasePrice.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Repair Costs (with contingency)</span>
+                  <span className="font-medium text-orange-600">-${repairCostsWithContingency.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500">Holding + Closing</span>
+                  <span className="font-medium text-orange-600">-${(holdingCosts + closingCosts).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-500">Financing Costs</span>
@@ -672,10 +920,10 @@ export default function AnalysisPage() {
               </div>
 
               {/* 70% Rule Check */}
-              <div className={`mt-4 p-3 rounded-lg ${(purchasePrice + repairCosts) < (arv * 0.7) ? 'bg-green-50' : 'bg-yellow-50'}`}>
+              <div className={`mt-4 p-3 rounded-lg ${(purchasePrice + repairCostsWithContingency) < (arv * 0.7) ? 'bg-green-50' : 'bg-yellow-50'}`}>
                 <p className="text-sm">
                   <span className="font-semibold">70% Rule: </span>
-                  {(purchasePrice + repairCosts) < (arv * 0.7) 
+                  {(purchasePrice + repairCostsWithContingency) < (arv * 0.7) 
                     ? '✅ Passes (within 70% rule)' 
                     : '⚠️ Exceeds 70% rule'}
                 </p>
