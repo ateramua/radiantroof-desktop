@@ -88,6 +88,7 @@ export default function AdminLayout({ children }) {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [activePath, setActivePath] = useState('/admin');
   const userRole = user?.role;
 
   // Handle scroll effect for header
@@ -103,6 +104,11 @@ export default function AdminLayout({ children }) {
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Set active path based on current route
+  useEffect(() => {
+    setActivePath(window.location.pathname);
   }, []);
 
   useEffect(() => {
@@ -138,148 +144,155 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50/50 relative">
+    <div className="min-h-screen flex bg-gray-50/50 relative">
       <GradientBackground />
 
-      {/* Admin Navigation */}
-      <header className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled ? 'bg-white/80 backdrop-blur-xl shadow-lg' : 'bg-white/50 backdrop-blur-sm'
-      }`}>
-        <div className="container mx-auto px-4">
-          {/* Top bar with user info and quick actions */}
-          <div className="flex justify-between items-center py-3 border-b border-gray-200/50">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-                  <span className="text-white font-bold text-lg">A</span>
-                </div>
-                <span className="font-semibold text-gray-700">Admin Console</span>
-              </div>
-              <span className="text-sm text-gray-400">|</span>
-              <span className="text-sm text-gray-500">{currentTime.toLocaleDateString()} • {currentTime.toLocaleTimeString()}</span>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <AdminBadge />
-              <div className="flex items-center space-x-3 pl-3 border-l border-gray-200">
-                <div className="text-right">
-                  <p className="text-sm font-semibold text-gray-700">{user?.name || 'Admin'}</p>
-                  <p className="text-xs text-gray-400">{user?.email}</p>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold shadow-md">
-                  {user?.name?.charAt(0) || 'A'}
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* SIDEBAR - Left side navigation */}
+      <div className="fixed left-0 top-0 h-full w-64 z-50 flex flex-col">
+        {/* DashboardSidebar - Takes remaining height */}
+        <div className="flex-1 overflow-y-auto">
+          <DashboardSidebar user={user} userRole={userRole} />
+        </div>
+      </div>
 
-          {/* Navigation links */}
-          <div className="flex items-center justify-between py-2">
-            <DashboardSidebar user={user} userRole={userRole} />
-            
-            <nav className="flex items-center space-x-1">
-              <NavItem href="/admin" isActive={true}>
-                <span>📊</span>
-                <span>Dashboard</span>
-              </NavItem>
+      {/* MAIN CONTENT AREA - Right side */}
+      <div className="flex-1 flex flex-col ml-64"> {/* ml-64 matches sidebar width */}
+        
+        {/* TOP HEADER - Admin context and actions */}
+        <header className={`sticky top-0 z-40 transition-all duration-300 ${
+          isScrolled ? 'bg-white/80 backdrop-blur-xl shadow-lg' : 'bg-white/50 backdrop-blur-sm'
+        }`}>
+          <div className="px-6">
+            {/* Top bar with user info and quick actions */}
+            <div className="flex justify-between items-center py-3 border-b border-gray-200/50">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <span className="font-semibold text-gray-700">Admin Console</span>
+                </div>
+                <span className="text-sm text-gray-400">|</span>
+                <span className="text-sm text-gray-500">{currentTime.toLocaleDateString()} • {currentTime.toLocaleTimeString()}</span>
+              </div>
               
-              <NavItem href="/admin/users">
-                <span>👥</span>
-                <span>User Management</span>
-              </NavItem>
-              
-              <NavItem href="/admin/properties">
-                <span>📋</span>
-                <span>Property Inventory</span>
-              </NavItem>
-              
-              <div className="ml-4 relative group">
-                <Link href="/admin/properties/AddProperties">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
-                    <div className="relative px-5 py-2.5 bg-white rounded-xl leading-none flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:-translate-y-0.5">
-                      <span className="text-lg text-green-600 group-hover:scale-110 transition-transform">➕</span>
-                      <span className="font-semibold text-gray-700">Add Property</span>
-                    </div>
+              <div className="flex items-center space-x-3">
+                <AdminBadge />
+                <div className="flex items-center space-x-3 pl-3 border-l border-gray-200">
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-gray-700">{user?.name || 'Admin'}</p>
+                    <p className="text-xs text-gray-400">{user?.email}</p>
                   </div>
-                </Link>
-              </div>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      {/* Quick Stats Dashboard (only show on main admin page) */}
-      {children?.props?.children?.type?.name === 'AdminDashboard' && (
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatsCard 
-              title="Total Properties" 
-              value="247" 
-              icon="🏢"
-              trend={12}
-              color="blue"
-            />
-            <StatsCard 
-              title="Active Users" 
-              value="1,284" 
-              icon="👥"
-              trend={8}
-              color="green"
-            />
-            <StatsCard 
-              title="Monthly Revenue" 
-              value="$124.5K" 
-              icon="💰"
-              trend={-3}
-              color="purple"
-            />
-            <StatsCard 
-              title="Deals Closed" 
-              value="42" 
-              icon="🎯"
-              trend={23}
-              color="orange"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Main Content Area with enhanced container */}
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <div className="relative">
-          {/* Decorative elements */}
-          <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl -z-10"></div>
-          <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-br from-green-400/10 to-teal-400/10 rounded-full blur-3xl -z-10"></div>
-          
-          {/* Content wrapper with glass effect */}
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
-            {children}
-          </div>
-        </div>
-      </main>
-
-      {/* Enhanced Footer */}
-      <footer className="mt-auto border-t border-gray-200/50 bg-white/30 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-500">© 2024 Radiant Roof Realty</span>
-              <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
-              <span className="text-sm text-gray-500">Admin v2.0</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-xs text-gray-400 bg-white/50 px-3 py-1 rounded-full">
-                Last backup: Today 02:34 AM
-              </span>
-              <div className="flex items-center space-x-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                <span className="text-xs text-gray-500">System Online</span>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold shadow-md">
+                    {user?.name?.charAt(0) || 'A'}
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* TOP NAVIGATION - Admin-specific horizontal nav */}
+            <div className="flex items-center justify-end py-2">
+              <nav className="flex items-center space-x-1">
+                <NavItem href="/admin" isActive={activePath === '/admin'}>
+                  <span>📊</span>
+                  <span>Dashboard</span>
+                </NavItem>
+                
+                <NavItem href="/admin/users" isActive={activePath === '/admin/users'}>
+                  <span>👥</span>
+                  <span>User Management</span>
+                </NavItem>
+                
+                <NavItem href="/admin/properties" isActive={activePath === '/admin/properties'}>
+                  <span>📋</span>
+                  <span>Property Inventory</span>
+                </NavItem>
+                
+                <div className="ml-4 relative group">
+                  <Link href="/admin/properties/AddProperties">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
+                      <div className="relative px-5 py-2.5 bg-white rounded-xl leading-none flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:-translate-y-0.5">
+                        <span className="text-lg text-green-600 group-hover:scale-110 transition-transform">➕</span>
+                        <span className="font-semibold text-gray-700">Add Property</span>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              </nav>
+            </div>
           </div>
-        </div>
-      </footer>
+        </header>
+
+        {/* Quick Stats Dashboard (only show on main admin page) */}
+        {children?.props?.children?.type?.name === 'AdminDashboard' && (
+          <div className="px-6 py-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <StatsCard 
+                title="Total Properties" 
+                value="247"
+                icon="🏢"
+                trend={12}
+                color="blue"
+              />
+              <StatsCard 
+                title="Active Users" 
+                value="1,284" 
+                icon="👥"
+                trend={8}
+                color="green"
+              />
+              <StatsCard 
+                title="Monthly Revenue" 
+                value="$124.5K" 
+                icon="💰"
+                trend={-3}
+                color="purple"
+              />
+              <StatsCard 
+                title="Deals Closed" 
+                value="42" 
+                icon="🎯"
+                trend={23}
+                color="orange"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Main Content Area with enhanced container */}
+        <main className="flex-1 px-6 py-8">
+          <div className="relative">
+            {/* Decorative elements */}
+            <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl -z-10"></div>
+            <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-br from-green-400/10 to-teal-400/10 rounded-full blur-3xl -z-10"></div>
+            
+            {/* Content wrapper with glass effect */}
+            <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-white/20">
+              {children}
+            </div>
+          </div>
+        </main>
+
+        {/* Enhanced Footer */}
+        <footer className="mt-auto border-t border-gray-200/50 bg-white/30 backdrop-blur-sm">
+          <div className="px-6 py-6">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-500">© 2024 Radiant Roof Realty</span>
+                <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                <span className="text-sm text-gray-500">Admin v2.0</span>
+              </div>
+              <div className="flex items-center space-x-4">
+                <span className="text-xs text-gray-400 bg-white/50 px-3 py-1 rounded-full">
+                  Last backup: Today 02:34 AM
+                </span>
+                <div className="flex items-center space-x-1">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  <span className="text-xs text-gray-500">System Online</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
 
       <style jsx>{`
         @keyframes float {

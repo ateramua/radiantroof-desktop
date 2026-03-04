@@ -1,18 +1,96 @@
 "use client";
 import { useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
+import { useDeal } from "../../../context/DealContext";
 import DealImport from "@/components/sourcing/DealImport";
 import WholesalerNetwork from "@/components/sourcing/WholesalerNetwork";
 import ExpiredListingsMonitor from "@/components/sourcing/ExpiredListingsMonitor";
-import { createDeal } from "@/lib/sourcing/models";
 import CountyRecords from "@/components/sourcing/CountyRecords";
+import Link from "next/link";
+
+// Deal Card Component
+const DealCard = ({ deal, onMoveToScreening }) => (
+  <div className="bg-white border rounded-lg p-4 hover:shadow-md transition cursor-pointer">
+    <div className="flex justify-between items-start mb-2">
+      <div>
+        <h4 className="font-semibold">{deal.address}</h4>
+        <p className="text-sm text-gray-500">{deal.type} • {deal.source}</p>
+      </div>
+      <span className={`text-xs px-2 py-1 rounded-full ${
+        deal.score >= 80 ? 'bg-green-100 text-green-800' :
+        deal.score >= 60 ? 'bg-yellow-100 text-yellow-800' :
+        'bg-red-100 text-red-800'
+      }`}>
+        Score: {deal.score}
+      </span>
+    </div>
+    
+    <div className="grid grid-cols-3 gap-2 text-sm mt-3">
+      <div>
+        <p className="text-gray-500">Asking</p>
+        <p className="font-medium">${deal.askingPrice?.toLocaleString() || '—'}</p>
+      </div>
+      <div>
+        <p className="text-gray-500">ARV</p>
+        <p className="font-medium">${deal.arv?.toLocaleString() || '—'}</p>
+      </div>
+      <div>
+        <p className="text-gray-500">Repairs</p>
+        <p className="font-medium">${deal.quickRepairEstimate?.toLocaleString() || '—'}</p>
+      </div>
+    </div>
+    
+    <div className="flex justify-between items-center mt-3 pt-3 border-t">
+      <span className="text-xs text-gray-400">Added {deal.addedAt}</span>
+      <div className="flex space-x-2">
+        <button className="text-xs text-gray-600 hover:text-gray-900">📋 Details</button>
+        <Link href="/dashboard/screening">
+          <button 
+            onClick={() => onMoveToScreening(deal)}
+            className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+          >
+            Start Screening
+          </button>
+        </Link>
+      </div>
+    </div>
+  </div>
+);
+
+// Quick Repair Preview Component
+const QuickRepairPreview = ({ deal }) => {
+  if (!deal.repairEstimate) return null;
+  
+  return (
+    <div className="bg-blue-50 rounded-lg p-3 text-sm">
+      <p className="font-medium mb-2">🔨 Quick Repair Estimate</p>
+      <div className="grid grid-cols-2 gap-2">
+        {Object.entries(deal.repairEstimate.majorSystems || {}).map(([system, data]) => (
+          data.cost > 0 && (
+            <div key={system} className="flex justify-between">
+              <span className="capitalize text-gray-600">{system}:</span>
+              <span className="font-medium">${data.cost.toLocaleString()}</span>
+            </div>
+          )
+        ))}
+      </div>
+      <div className="border-t mt-2 pt-2 flex justify-between font-bold">
+        <span>Total:</span>
+        <span>${deal.quickRepairEstimate?.toLocaleString()}</span>
+      </div>
+    </div>
+  );
+};
 
 export default function SourcingPage() {
   const { user } = useAuth();
+  const { createNewDeal, currentDeal, dealHistory } = useDeal();
   const [selectedTier, setSelectedTier] = useState("TIER_1");
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("tiers"); // tiers, import, network, expired
+  const [activeTab, setActiveTab] = useState("tiers"); // tiers, import, network, expired, county
   const [sourcingList, setSourcingList] = useState([]);
+  const [selectedDeal, setSelectedDeal] = useState(null);
+  const [showRepairModal, setShowRepairModal] = useState(false);
 
   // Tier data based on your design
   const tiers = {
@@ -54,13 +132,107 @@ export default function SourcingPage() {
     }
   };
 
-  // Sample leads list
+  // Enhanced leads list with repair data
   const leadsList = [
-    { id: 1, name: "John Smith", address: "123 Main St", tier: "TIER_1", type: "Past Client", score: 95, lastContact: "2h ago", status: "Hot" },
-    { id: 2, name: "Mary Johnson", address: "456 Oak Ave", tier: "TIER_1", type: "Expired Listing", score: 88, lastContact: "1d ago", status: "Warm" },
-    { id: 3, name: "Robert Davis", address: "789 Pine St", tier: "TIER_2", type: "Pre-Foreclosure", score: 76, lastContact: "3d ago", status: "Contact" },
-    { id: 4, name: "Sarah Wilson", address: "321 Elm St", tier: "TIER_2", type: "Absentee Owner", score: 72, lastContact: "5d ago", status: "New" },
-    { id: 5, name: "Michael Brown", address: "654 Maple Ave", tier: "TIER_3", type: "Geo Farming", score: 45, lastContact: "1w ago", status: "Cold" },
+    { 
+      id: 1, 
+      name: "John Smith", 
+      address: "123 Main St", 
+      tier: "TIER_1", 
+      type: "Past Client", 
+      score: 95, 
+      lastContact: "2h ago", 
+      status: "Hot",
+      askingPrice: 325000,
+      arv: 425000,
+      quickRepairEstimate: 45000,
+      repairEstimate: {
+        majorSystems: {
+          roof: { condition: "Fair", cost: 8000 },
+          hvac: { condition: "Good", cost: 0 },
+          electrical: { condition: "Poor", cost: 12000 },
+          plumbing: { condition: "Good", cost: 0 },
+          foundation: { condition: "Good", cost: 0 }
+        },
+        rooms: {
+          kitchen: { condition: "Full Gut", cost: 25000 },
+          bathroom1: { condition: "Full Gut", cost: 0 },
+          bathroom2: { condition: "Cosmetic", cost: 0 },
+          bedrooms: { condition: "Paint/Flooring", cost: 0 },
+          living: { condition: "Paint/Flooring", cost: 0 },
+          basement: { condition: "Waterproofing", cost: 0 }
+        }
+      }
+    },
+    { 
+      id: 2, 
+      name: "Mary Johnson", 
+      address: "456 Oak Ave", 
+      tier: "TIER_1", 
+      type: "Expired Listing", 
+      score: 88, 
+      lastContact: "1d ago", 
+      status: "Warm",
+      askingPrice: 295000,
+      arv: 385000,
+      quickRepairEstimate: 35000,
+      repairEstimate: {
+        majorSystems: {
+          roof: { condition: "Good", cost: 0 },
+          hvac: { condition: "Fair", cost: 5000 },
+          electrical: { condition: "Good", cost: 0 },
+          plumbing: { condition: "Fair", cost: 5000 },
+          foundation: { condition: "Good", cost: 0 }
+        },
+        rooms: {
+          kitchen: { condition: "Cosmetic", cost: 5000 },
+          bathroom1: { condition: "Partial Gut", cost: 15000 },
+          bathroom2: { condition: "Good", cost: 0 },
+          bedrooms: { condition: "Paint/Flooring", cost: 5000 },
+          living: { condition: "Paint/Flooring", cost: 0 },
+          basement: { condition: "Good", cost: 0 }
+        }
+      }
+    },
+    { 
+      id: 3, 
+      name: "Robert Davis", 
+      address: "789 Pine St", 
+      tier: "TIER_2", 
+      type: "Pre-Foreclosure", 
+      score: 76, 
+      lastContact: "3d ago", 
+      status: "Contact",
+      askingPrice: 280000,
+      arv: 365000,
+      quickRepairEstimate: 28000
+    },
+    { 
+      id: 4, 
+      name: "Sarah Wilson", 
+      address: "321 Elm St", 
+      tier: "TIER_2", 
+      type: "Absentee Owner", 
+      score: 72, 
+      lastContact: "5d ago", 
+      status: "New",
+      askingPrice: 310000,
+      arv: 405000,
+      quickRepairEstimate: 42000
+    },
+    { 
+      id: 5, 
+      name: "Michael Brown", 
+      address: "654 Maple Ave", 
+      tier: "TIER_3", 
+      type: "Geo Farming", 
+      score: 45, 
+      lastContact: "1w ago", 
+      status: "Cold",
+      askingPrice: 265000,
+      arv: 345000,
+      quickRepairEstimate: 38000
+    },
   ];
 
   const filteredLeads = leadsList.filter(lead =>
@@ -68,15 +240,77 @@ export default function SourcingPage() {
     lead.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleNewDeal = (deal) => {
-    setSourcingList([deal, ...sourcingList].slice(0, 50));
-
-    // Show notification
-    alert(`✅ New deal added: ${deal.address || 'Property'} (Score: ${deal.score})`);
+  // Handle moving deal to screening - UPDATED with Deal Context
+  const handleMoveToScreening = (lead) => {
+    // Create a new deal in context
+    const newDeal = createNewDeal({
+      address: lead.address,
+      ownerName: lead.name,
+      askingPrice: lead.askingPrice,
+      arv: lead.arv,
+      quickRepairEstimate: lead.quickRepairEstimate,
+      repairEstimate: lead.repairEstimate,
+      source: lead.type,
+      tier: lead.tier,
+      score: lead.score,
+      status: lead.status,
+      fromSourcing: true,
+      currentPhase: 'sourcing',
+      lastContact: lead.lastContact
+    });
+    
+    console.log('Created new deal:', newDeal);
   };
 
+  // Handle new deal from import - UPDATED with Deal Context
+  const handleNewDeal = (deal) => {
+    const newDeal = createNewDeal({
+      address: deal.address,
+      ownerName: deal.ownerName || deal.name,
+      askingPrice: deal.askingPrice,
+      arv: deal.arv,
+      quickRepairEstimate: deal.quickRepairEstimate,
+      repairEstimate: deal.repairEstimate,
+      source: deal.source || 'import',
+      score: deal.score || 50,
+      tier: 'TIER_2', // Default tier for imports
+      status: 'New',
+      currentPhase: 'sourcing',
+      ...deal
+    });
+    
+    setSourcingList(prev => [newDeal, ...prev].slice(0, 50));
+    
+    // Show notification
+    alert(`✅ New deal added: ${deal.address || 'Property'} (Score: ${deal.score || 50})`);
+  };
+
+  // Handle bulk import - UPDATED with Deal Context
   const handleBulkImport = (deals) => {
-    setSourcingList([...deals, ...sourcingList].slice(0, 50));
+    const newDeals = deals.map(deal => 
+      createNewDeal({
+        address: deal.address,
+        ownerName: deal.ownerName,
+        askingPrice: deal.askingPrice,
+        arv: deal.arv,
+        quickRepairEstimate: deal.quickRepairEstimate,
+        source: 'bulk-import',
+        score: 50,
+        tier: 'TIER_2',
+        status: 'New',
+        currentPhase: 'sourcing',
+        ...deal
+      })
+    );
+    
+    setSourcingList(prev => [...newDeals, ...prev].slice(0, 50));
+    alert(`✅ ${deals.length} deals imported successfully`);
+  };
+
+  // Handle quick repair modal
+  const handleQuickRepair = (lead) => {
+    setSelectedDeal(lead);
+    setShowRepairModal(true);
   };
 
   return (
@@ -91,49 +325,112 @@ export default function SourcingPage() {
         </div>
         <div className="flex space-x-2">
           <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-            {sourcingList.length} Active Leads
+            {dealHistory.length} Total Deals
           </span>
+          <Link href="/dashboard/screening">
+            <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+              Go to Screening
+            </button>
+          </Link>
         </div>
       </div>
+
+      {/* Pipeline Overview */}
+      <div className="grid grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
+          <p className="text-sm text-gray-500">Sourcing</p>
+          <p className="text-2xl font-bold">{leadsList.length}</p>
+          <p className="text-xs text-gray-400">Active leads</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-yellow-500">
+          <p className="text-sm text-gray-500">Screening</p>
+          <p className="text-2xl font-bold">3</p>
+          <p className="text-xs text-gray-400">In due diligence</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-purple-500">
+          <p className="text-sm text-gray-500">Analysis</p>
+          <p className="text-2xl font-bold">2</p>
+          <p className="text-xs text-gray-400">Under contract</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
+          <p className="text-sm text-gray-500">Renovation</p>
+          <p className="text-2xl font-bold">1</p>
+          <p className="text-xs text-gray-400">In progress</p>
+        </div>
+      </div>
+
+      {/* Current Deal Indicator - Shows if a deal is active */}
+      {currentDeal && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <span className="text-blue-600">🔵</span>
+            <p className="text-sm">
+              <span className="font-medium">Active Deal:</span> {currentDeal.address} 
+              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                Phase: {currentDeal.currentPhase}
+              </span>
+            </p>
+          </div>
+          <Link href={`/dashboard/${currentDeal.currentPhase}`}>
+            <button className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
+              Continue
+            </button>
+          </Link>
+        </div>
+      )}
 
       {/* Sourcing Tabs */}
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8">
           <button
             onClick={() => setActiveTab('tiers')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'tiers'
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'tiers'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+            }`}
           >
             📊 Acquisition Tiers
           </button>
           <button
             onClick={() => setActiveTab('import')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'import'
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'import'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+            }`}
           >
             📥 CSV Import
           </button>
           <button
             onClick={() => setActiveTab('network')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'network'
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'network'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+            }`}
           >
             🤝 Wholesaler Network
           </button>
           <button
             onClick={() => setActiveTab('expired')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'expired'
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'expired'
                 ? 'border-blue-500 text-blue-600'
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+            }`}
           >
             📉 Expired Listings
+          </button>
+          <button
+            onClick={() => setActiveTab('county')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'county'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            🏛️ County Records
           </button>
         </nav>
       </div>
@@ -156,8 +453,9 @@ export default function SourcingPage() {
               {Object.entries(tiers).map(([tierKey, tier]) => (
                 <div
                   key={tierKey}
-                  className={`border rounded-lg p-4 cursor-pointer transition ${selectedTier === tierKey ? 'ring-2 ring-blue-500 border-blue-500' : 'hover:border-gray-300'
-                    }`}
+                  className={`border rounded-lg p-4 cursor-pointer transition ${
+                    selectedTier === tierKey ? 'ring-2 ring-blue-500 border-blue-500' : 'hover:border-gray-300'
+                  }`}
                   onClick={() => setSelectedTier(tierKey)}
                 >
                   <div className="flex justify-between items-center mb-3">
@@ -234,28 +532,50 @@ export default function SourcingPage() {
               {/* Leads Table */}
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {filteredLeads.map((lead) => (
-                  <div key={lead.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-2 h-2 rounded-full ${lead.tier === "TIER_1" ? "bg-green-500" :
-                          lead.tier === "TIER_2" ? "bg-yellow-500" : "bg-red-500"
-                        }`}></div>
-                      <div>
-                        <p className="font-medium">{lead.name}</p>
+                  <div key={lead.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                    <div className="flex items-center space-x-3 flex-1">
+                      <div className={`w-2 h-2 rounded-full ${
+                        lead.tier === "TIER_1" ? "bg-green-500" :
+                        lead.tier === "TIER_2" ? "bg-yellow-500" : "bg-red-500"
+                      }`}></div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="font-medium">{lead.name}</p>
+                          <span className="text-sm font-medium text-blue-600 ml-2">{lead.score}</span>
+                        </div>
                         <p className="text-sm text-gray-500">{lead.address}</p>
+                        <div className="flex items-center space-x-4 mt-1">
+                          <span className="text-xs text-gray-400">{lead.type}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            lead.status === "Hot" ? "bg-red-100 text-red-800" :
+                            lead.status === "Warm" ? "bg-yellow-100 text-yellow-800" :
+                            lead.status === "Contact" ? "bg-blue-100 text-blue-800" :
+                            lead.status === "New" ? "bg-green-100 text-green-800" :
+                            "bg-gray-100 text-gray-800"
+                          }`}>
+                            {lead.status}
+                          </span>
+                          <span className="text-xs text-gray-400">{lead.lastContact}</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <span className="text-xs text-gray-400">{lead.type}</span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${lead.status === "Hot" ? "bg-red-100 text-red-800" :
-                          lead.status === "Warm" ? "bg-yellow-100 text-yellow-800" :
-                            lead.status === "Contact" ? "bg-blue-100 text-blue-800" :
-                              lead.status === "New" ? "bg-green-100 text-green-800" :
-                                "bg-gray-100 text-gray-800"
-                        }`}>
-                        {lead.status}
-                      </span>
-                      <span className="text-sm font-medium text-blue-600">{lead.score}</span>
-                      <span className="text-xs text-gray-400">{lead.lastContact}</span>
+                    
+                    {/* Quick Actions */}
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleQuickRepair(lead)}
+                        className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200"
+                      >
+                        🔨 Quick Repair
+                      </button>
+                      <Link href="/dashboard/screening">
+                        <button
+                          onClick={() => handleMoveToScreening(lead)}
+                          className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                        >
+                          Screen
+                        </button>
+                      </Link>
                     </div>
                   </div>
                 ))}
@@ -384,9 +704,40 @@ export default function SourcingPage() {
         <ExpiredListingsMonitor onNewDeal={handleNewDeal} />
       )}
 
-      {/* 👇 ADD THIS NEW SECTION FOR COUNTY RECORDS */}
       {activeTab === 'county' && (
         <CountyRecords onNewDeal={handleNewDeal} />
+      )}
+
+      {/* Quick Repair Modal */}
+      {showRepairModal && selectedDeal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Quick Repair Estimate</h3>
+            <p className="text-sm text-gray-600 mb-4">{selectedDeal.address}</p>
+            
+            <QuickRepairPreview deal={selectedDeal} />
+            
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowRepairModal(false)}
+                className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <Link href="/dashboard/screening" className="flex-1">
+                <button
+                  onClick={() => {
+                    handleMoveToScreening(selectedDeal);
+                    setShowRepairModal(false);
+                  }}
+                  className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                >
+                  Proceed to Screening
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Recent Activity Feed */}
