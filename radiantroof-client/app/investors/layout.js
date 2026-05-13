@@ -63,7 +63,7 @@ export default function InvestorLayout({ children }) {
         <nav className="flex-1 overflow-y-auto py-4">
           <div className="px-4 space-y-1">
             <Link
-              href="/investor"
+              href="/investors"
               className="flex items-center space-x-2 p-2 rounded bg-green-50 text-green-700 font-medium transition"
             >
               <span>💰</span>
@@ -71,7 +71,7 @@ export default function InvestorLayout({ children }) {
             </Link>
 
             <Link
-              href="/investor/portfolio"
+              href="/investors/portfolio"
               className="flex items-center space-x-2 p-2 rounded hover:bg-green-50 text-gray-700 hover:text-green-600 transition"
             >
               <span>📊</span>
@@ -79,7 +79,7 @@ export default function InvestorLayout({ children }) {
             </Link>
 
             <Link
-              href="/investor/properties"
+              href="/investors/properties"
               className="flex items-center space-x-2 p-2 rounded hover:bg-green-50 text-gray-700 hover:text-green-600 transition"
             >
               <span>🏘️</span>
@@ -87,7 +87,7 @@ export default function InvestorLayout({ children }) {
             </Link>
 
             <Link
-              href="/investor/returns"
+              href="/investors/returns"
               className="flex items-center space-x-2 p-2 rounded hover:bg-green-50 text-gray-700 hover:text-green-600 transition"
             >
               <span>📈</span>
@@ -95,7 +95,7 @@ export default function InvestorLayout({ children }) {
             </Link>
 
             <Link
-              href="/investor/communications"
+              href="/investors/communications"
               className="flex items-center space-x-2 p-2 rounded hover:bg-green-50 text-gray-700 hover:text-green-600 transition"
             >
               <span>💬</span>

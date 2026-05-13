@@ -1,28 +1,20 @@
 /** @type {import('next').NextConfig} */
-const isDev = process.env.NODE_ENV === 'development';
-
 const nextConfig = {
-  images: {
-    unoptimized: true,
-  },
-
+  // ✅ Core static export configuration
+  output: 'export',
   trailingSlash: true,
-
-  async rewrites() {
-    if (!isDev) return [];
-
-    // Try multiple ports for the backend in case of port conflicts
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:5001/api/:path*',
-      },
-    ];
+  
+  // ✅ Images must be unoptimized for static export
+  images: { 
+    unoptimized: true 
   },
-
-  // Disable static optimization in Electron environment
-  // This ensures pages work properly when loaded from file://
-  staticPageGenerationTimeout: 60,
+  
+  // ✅ CRITICAL for Electron file:// protocol
+  assetPrefix: './',
+  basePath: '',
+  
+  // Disable SWC for workspace compatibility
+  swcMinify: false,
 };
 
 export default nextConfig;

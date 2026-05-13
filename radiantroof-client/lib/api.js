@@ -5,12 +5,11 @@ import https from "https";
 const getApiBaseUrl = () => {
   // Check if running in Electron
   if (typeof window !== "undefined" && window.electronAPI) {
-    // For Electron, assume port is available synchronously or use default
-    // In practice, we might need to await, but for simplicity, use default and update later
-    return "http://localhost:5001/api"; // Will be updated when port is fetched
+    // For Electron, use default port initially - will be updated later
+    return "http://localhost:5001";
   }
   // Fallback to environment or default
-  return process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5001/api";
+  return process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5001";
 };
 
 // Create HTTPS agent for production SSL verification
@@ -35,10 +34,10 @@ export const updateApiBaseUrl = async () => {
   if (typeof window !== "undefined" && window.electronAPI) {
     try {
       const port = await window.electronAPI.getBackendPort();
-      api.defaults.baseURL = `http://localhost:${port}/api`;
-      console.log('Updated API base URL to:', api.defaults.baseURL);
+      api.defaults.baseURL = `http://localhost:${port}`;
+      console.log('✅ Updated API base URL to:', api.defaults.baseURL);
     } catch (error) {
-      console.warn('Failed to update API base URL:', error);
+      console.warn('⚠️ Failed to update API base URL:', error);
     }
   }
 };
@@ -46,6 +45,12 @@ export const updateApiBaseUrl = async () => {
 // Request interceptor: attach token
 api.interceptors.request.use((config) => {
   const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+  
+  // Ensure URL starts with /api prefix
+  if (!config.url.startsWith('/api/') && !config.url.includes('/api/')) {
+    config.url = `/api${config.url.startsWith('/') ? config.url : '/' + config.url}`;
+  }
+  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -53,7 +58,7 @@ api.interceptors.request.use((config) => {
   if (process.env.NODE_ENV !== "production") {
     console.log('🚀 API Request:', {
       method: config.method.toUpperCase(),
-      url: config.baseURL + config.url,
+      fullUrl: config.baseURL + config.url,
       headers: config.headers,
       data: config.data,
       token: token ? 'Present' : 'None'
@@ -84,6 +89,16 @@ api.interceptors.response.use(
 
     if (error.code === 'ECONNABORTED') {
       console.error('❌ Request timeout – backend might be down');
+    }
+    
+    if (error.response?.status === 401) {
+      // Handle unauthorized - clear token and redirect to login
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("accessToken");
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
     }
 
     return Promise.reject(error);

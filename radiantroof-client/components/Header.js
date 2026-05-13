@@ -19,7 +19,7 @@ export default function Header() {
 
   const isAdminRoute = pathname?.startsWith('/admin');
   const isDashboardRoute = pathname?.startsWith('/dashboard');
-  const isInvestorRoute = pathname?.startsWith('/investor');
+  const isInvestorRoute = pathname?.startsWith('/investors');
 
   return (
     <>
@@ -80,7 +80,7 @@ export default function Header() {
                 {/* Investor button */}
                 {user.role === 'invest' && !isInvestorRoute && (
                   <Link
-                    href="/investor"
+                    href="/investors"
                     className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center space-x-1"
                   >
                     <span>💰</span>

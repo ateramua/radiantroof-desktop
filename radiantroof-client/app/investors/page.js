@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }) {
     
     // Investors should not access dashboard - redirect to investor portal
     if (!loading && user && user.role === 'invest') {
-      router.push("/investor");
+      router.push("/investors");
     }
   }, [user, loading, router]);
 
@@ -215,7 +215,7 @@ export default function DashboardLayout({ children }) {
                 </Link>
                 
                 <Link 
-                  href="/investor" 
+                  href="/investors" 
                   className="flex items-center space-x-2 p-2 rounded hover:bg-green-50 text-gray-700 hover:text-green-600 transition"
                 >
                   <span>💰</span>

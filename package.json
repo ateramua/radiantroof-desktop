@@ -2,6 +2,8 @@
   "name": "radiantroof-electron",
   "version": "0.1.0",
   "private": true,
+  "description": "RadiantRoof Realty Desktop Application",
+  "author": "RadiantRoof Team",
   "main": "electron/main.js",
   "workspaces": [
     "radiantroof-client",
@@ -10,40 +12,78 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development concurrently \"cd radiantroof-client && npm run dev\" \"cd radiantroof-server && npm run dev\" \"wait-on http://localhost:5001/health && wait-on http://localhost:3000 http://localhost:3001 && electron .\"",
     "start": "cross-env NODE_ENV=production electron .",
-    "build": "cd radiantroof-client && npm run build && cd .. && electron-builder build --publish=never",
-    "package": "npm run build"
-  },
-  "dependencies": {
+    "build:client": "cd radiantroof-client && npm run build",
+    "build:server": "cd radiantroof-server && npm run build || echo 'No build script in server, skipping'",
+    "build": "npm run build:client && npm run build:server",
+    "postbuild": "echo 'Build completed successfully'",
+    "dist": "npm run build && electron-builder build --publish=never",
+    "dist:mac": "npm run build && electron-builder build --mac --publish=never",
+    "dist:win": "npm run build && electron-builder build --win --publish=never",
+    "dist:linux": "npm run build && electron-builder build --linux --publish=never",
+    "package": "npm run dist"
   },
   "devDependencies": {
-    "concurrently": "^8.2.0",
+    "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
-    "electron": "^26.3.0",
-    "electron-builder": "^24.8.0",
-    "wait-on": "^7.0.1"
+    "electron": "^28.3.0",
+    "electron-builder": "^24.13.3",
+    "wait-on": "^7.2.0"
   },
   "build": {
     "appId": "com.radiantroof.realty",
     "productName": "RadiantRoof Realty",
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/sqlite3/**/*",
+      "**/node_modules/better-sqlite3/**/*",
+      "**/radiantroof-server/**/*"
+    ],
+    "npmRebuild": false,
     "files": [
       "electron/**/*",
       "radiantroof-server/**/*",
-      "radiantroof-client/.next/**/*",
+      "radiantroof-client/out/**/*",
       "radiantroof-client/public/**/*",
       "radiantroof-client/package.json",
-      "radiantroof-server/package.json"
+      "radiantroof-server/package.json",
+      "!**/node_modules/**/*",
+      "!**/*.map",
+      "!**/test/**",
+      "!**/tests/**",
+      "!**/__tests__/**",
+      "!**/*.log",
+      "!**/*.ts",
+      "!**/tsconfig.json"
     ],
     "directories": {
-      "buildResources": "build"
+      "buildResources": "build",
+      "output": "dist"
     },
     "mac": {
-      "target": ["dmg", "zip"]
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.business",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
     },
     "linux": {
-      "target": ["AppImage"]
+      "target": [
+        "AppImage"
+      ],
+      "category": "Office"
     },
     "win": {
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     }
   }
 }
