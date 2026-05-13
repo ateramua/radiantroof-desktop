@@ -6,23 +6,31 @@ const session = require('express-session');
 // Load environment variables
 dotenv.config();
 
-// Import Prisma client
-const { prisma, testConnection } = require('./src/utils/prismaClient');
+const db = require('./src/models');
 
 const app = express();
 
 // CORS configuration - Updated for production and local testing
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim()).filter(Boolean)
+  : [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+      'http://localhost:3003',
+      'https://uncomplementally-issueless-veronique.ngrok-free.dev',
+      'https://www.radiantroofrealty.com',
+      'app://-'
+    ];
+
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN 
-    ? process.env.CORS_ORIGIN.split(',') 
-    : [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:3002',
-        'http://localhost:3003',
-        'https://uncomplementally-issueless-veronique.ngrok-free.dev',
-        'https://www.radiantroofrealty.com'
-      ],
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy violation: origin not allowed')); 
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'ngrok-skip-browser-warning'] // THIS MUST BE THERE
@@ -42,9 +50,9 @@ app.use(session({
     }
 }));
 
-// Make prisma available to routes (optional - can also import directly in routes)
+// Make db available to routes (optional - can also import directly in routes)
 app.use((req, res, next) => {
-  req.prisma = prisma;
+  req.db = db;
   next();
 });
 
@@ -65,12 +73,10 @@ app.get('/health', (req, res) => {
 // ============================================
 app.get('/api/test-db', async (req, res) => {
   try {
-    // Try to query the database
-    const result = await prisma.$queryRaw`SELECT NOW() as current_time`;
+    await db.sequelize.authenticate();
     res.json({ 
       success: true, 
-      message: 'Database connected',
-      time: result[0]
+      message: 'Database connected'
     });
   } catch (error) {
     console.error('Database test failed:', error);
@@ -110,12 +116,24 @@ app.use((req, res) => {
 });
 
 // Test database connection on startup
-testConnection().then(() => {
-  const PORT = process.env.PORT || 5001;
-  app.listen(PORT, () => {
-    console.log(`✅ Server running on port ${PORT}`);
-    console.log(`🌎 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-    console.log(`🗄️  Test DB: http://localhost:${PORT}/api/test-db`);
+db.sequelize.authenticate()
+  .then(() => {
+    console.log('✅ Database connected successfully.');
+    const PORT = process.env.PORT || 5001;
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on port ${PORT}`);
+      console.log(`🌎 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+      console.log(`🗄️  Test DB: http://localhost:${PORT}/api/test-db`);
+    });
+  })
+  .catch(err => {
+    console.error('❌ Database connection failed:', err.message);
+    console.error('   Continuing with server startup. Database operations may fail.');
+    const PORT = process.env.PORT || 5001;
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on port ${PORT} (database not ready)`);
+      console.log(`🌎 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+    });
   });
-});

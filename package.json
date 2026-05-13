@@ -1,0 +1,49 @@
+{
+  "name": "radiantroof-electron",
+  "version": "0.1.0",
+  "private": true,
+  "main": "electron/main.js",
+  "workspaces": [
+    "radiantroof-client",
+    "radiantroof-server"
+  ],
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development concurrently \"cd radiantroof-client && npm run dev\" \"cd radiantroof-server && npm run dev\" \"wait-on http://localhost:5001/health && wait-on http://localhost:3000 http://localhost:3001 && electron .\"",
+    "start": "cross-env NODE_ENV=production electron .",
+    "build": "cd radiantroof-client && npm run build && cd .. && electron-builder build --publish=never",
+    "package": "npm run build"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "cross-env": "^7.0.3",
+    "electron": "^26.3.0",
+    "electron-builder": "^24.8.0",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+    "appId": "com.radiantroof.realty",
+    "productName": "RadiantRoof Realty",
+    "files": [
+      "electron/**/*",
+      "radiantroof-server/**/*",
+      "radiantroof-client/.next/**/*",
+      "radiantroof-client/public/**/*",
+      "radiantroof-client/package.json",
+      "radiantroof-server/package.json"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "mac": {
+      "target": ["dmg", "zip"]
+    },
+    "linux": {
+      "target": ["AppImage"]
+    },
+    "win": {
+      "target": ["nsis"]
+    }
+  }
+}

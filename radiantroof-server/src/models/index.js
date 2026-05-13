@@ -1,35 +1,47 @@
-const { Sequelize, DataTypes } = require("sequelize");
+const path = require('path');
+const { Sequelize, DataTypes } = require('sequelize');
 
-// Use environment variables directly, with fallbacks
-const sequelize = new Sequelize({
-  dialect: "postgres",
-  host: process.env.DB_HOST || "localhost",
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || "radiantroof_db",
-  username: process.env.DB_USER || "radiant_user",
-  password: process.env.DB_PASSWORD || "supersecurepassword",
-  logging: console.log, // Enable logging to see SQL queries
-  dialectOptions: process.env.NODE_ENV === "production" 
-    ? { ssl: { require: true, rejectUnauthorized: false } } 
-    : {} // No SSL for local dev
-});
+const dbDialect = process.env.DB_DIALECT || 'sqlite';
+const isSqlite = dbDialect === 'sqlite';
 
-// Test the connection immediately
+const sequelizeConfig = isSqlite
+  ? {
+      dialect: 'sqlite',
+      storage: process.env.DB_STORAGE || path.join(__dirname, '../../radiantroof-server.sqlite'),
+      logging: console.log
+    }
+  : {
+      dialect: 'postgres',
+      host: process.env.DB_HOST || 'localhost',
+      port: process.env.DB_PORT || 5432,
+      database: process.env.DB_NAME || 'radiantroof_db',
+      username: process.env.DB_USER || 'radiant_user',
+      password: process.env.DB_PASSWORD || 'supersecurepassword',
+      logging: console.log,
+      dialectOptions: process.env.NODE_ENV === 'production'
+        ? { ssl: { require: true, rejectUnauthorized: false } }
+        : {}
+    };
+
+const sequelize = new Sequelize(sequelizeConfig);
+
 sequelize
   .authenticate()
-  .then(() => {
+  .then(async () => {
     console.log('✅ Database connection established successfully.');
+    if (isSqlite) {
+      await sequelize.sync();
+      console.log('✅ SQLite schema synced successfully.');
+    }
   })
   .catch(err => {
-    console.error('❌ Unable to connect to the database:', err);
+    console.error('❌ Unable to connect to the database:', err.message);
+    console.error('   This is OK for development. The server will continue running.');
   });
 
-// Initialize models
-const Property = require("./Property")(sequelize, DataTypes);
-
-// Fix User table mapping for case sensitivity
-const User = require("./User")(sequelize, DataTypes, {
-  tableName: "Users" // match exact table name in PostgreSQL
+const Property = require('./Property')(sequelize, DataTypes);
+const User = require('./User')(sequelize, DataTypes, {
+  tableName: 'Users'
 });
 
 const db = {

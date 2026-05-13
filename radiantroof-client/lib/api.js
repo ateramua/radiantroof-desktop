@@ -1,6 +1,18 @@
 import axios from "axios";
 import https from "https";
 
+// Function to get API base URL
+const getApiBaseUrl = () => {
+  // Check if running in Electron
+  if (typeof window !== "undefined" && window.electronAPI) {
+    // For Electron, assume port is available synchronously or use default
+    // In practice, we might need to await, but for simplicity, use default and update later
+    return "http://localhost:5001/api"; // Will be updated when port is fetched
+  }
+  // Fallback to environment or default
+  return process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5001/api";
+};
+
 // Create HTTPS agent for production SSL verification
 const httpsAgent = typeof window === "undefined" 
   ? new https.Agent({ rejectUnauthorized: true }) 
@@ -8,7 +20,7 @@ const httpsAgent = typeof window === "undefined"
 
 // Create axios instance
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5001/api",
+  baseURL: getApiBaseUrl(),
   withCredentials: true,
   httpsAgent,
   headers: {
@@ -17,6 +29,19 @@ const api = axios.create({
   },
   timeout: 10000,
 });
+
+// Function to update base URL when Electron port is available
+export const updateApiBaseUrl = async () => {
+  if (typeof window !== "undefined" && window.electronAPI) {
+    try {
+      const port = await window.electronAPI.getBackendPort();
+      api.defaults.baseURL = `http://localhost:${port}/api`;
+      console.log('Updated API base URL to:', api.defaults.baseURL);
+    } catch (error) {
+      console.warn('Failed to update API base URL:', error);
+    }
+  }
+};
 
 // Request interceptor: attach token
 api.interceptors.request.use((config) => {
