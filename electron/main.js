@@ -63,6 +63,12 @@ function registerAppProtocol() {
       // Remove leading slash
       requestPath = requestPath.replace(/^\//, '');
 
+      // Rewrite nested _next asset requests to the root _next path
+      const nextSegmentIndex = requestPath.indexOf('/_next/');
+      if (nextSegmentIndex !== -1) {
+        requestPath = requestPath.substring(nextSegmentIndex + 1);
+      }
+
       // Default to index.html
       if (!requestPath || requestPath === '') {
         requestPath = 'index.html';
@@ -76,9 +82,14 @@ function registerAppProtocol() {
         resolvedPath = path.join(resolvedPath, 'index.html');
       }
 
-      // Fallback to index.html if file not found
+      // Fallback to index.html if a page is missing
       if (!fs.existsSync(resolvedPath)) {
-        console.warn(`File not found: ${resolvedPath}, falling back to index.html`);
+        if (requestPath.startsWith('_next/')) {
+          console.error(`Static asset not found: ${resolvedPath}`);
+          return callback({ error: -6 });
+        }
+
+        console.warn(`Page file not found: ${resolvedPath}, falling back to index.html`);
         resolvedPath = path.join(__dirname, '../radiantroof-client/out/index.html');
       }
 

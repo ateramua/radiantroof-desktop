@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useAuth } from "../context/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
 import QuickDealCalculator from "./QuickDealCalculator";
-import { useState } from "react"; // ← Make sure this is here!
+import { useState } from "react";
 
 export default function Header() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [showCalculator, setShowCalculator] = useState(false); // ← This defines the state
+  const [showCalculator, setShowCalculator] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -35,23 +35,33 @@ export default function Header() {
             <Link href="/properties" className="hover:text-blue-600 transition">
               Properties
             </Link>
+            <Link href="/offline" className="hover:text-blue-600 transition">
+              Offline Data
+            </Link>
             <Link href="/investors" className="hover:text-blue-600 transition">
               Investors
             </Link>
 
-       
-            
             <Link href="/contact" className="hover:text-blue-600 transition">
               Contact
             </Link>
-                 {/* Quick Deal Calculator Button */}
+
+            <Link
+              href="/settings"
+              className="hover:text-blue-600 transition"
+            >
+              Settings
+            </Link>
+
+            {/* Quick Deal Calculator Button */}
             <button
-              onClick={() => setShowCalculator(true)} // ← This now works!
+              onClick={() => setShowCalculator(true)}
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all flex items-center space-x-2"
             >
               <span>🧮</span>
               <span>Quick Deal Calculator</span>
             </button>
+
             {/* Auth-based buttons */}
             {user ? (
               <>
