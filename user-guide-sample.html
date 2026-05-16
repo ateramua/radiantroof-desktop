@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RadiantRoof — Sample User Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0e12;
+      --bg-elevated: #12151c;
+      --bg-card: #161a24;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #e8eaef;
+      --text-muted: #8b92a5;
+      --accent: #3d8bfd;
+      --accent-soft: rgba(61, 139, 253, 0.15);
+      --accent-glow: rgba(61, 139, 253, 0.35);
+      --success: #34d399;
+      --warning: #fbbf24;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      --sidebar-w: 280px;
+      --header-h: 64px;
+      --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      --font: "DM Sans", system-ui, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient background */
+    .bg-mesh {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(61, 139, 253, 0.18), transparent),
+        radial-gradient(ellipse 60% 40% at 100% 0%, rgba(52, 211, 153, 0.08), transparent),
+        radial-gradient(ellipse 50% 30% at 50% 100%, rgba(61, 139, 253, 0.06), transparent);
+    }
+
+    /* Layout */
+    .app {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      min-height: 100dvh;
+    }
+
+    /* Mobile overlay */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity var(--transition), visibility var(--transition);
+      z-index: 98;
+    }
+    .drawer-backdrop.is-open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100dvh;
+      background: var(--bg-elevated);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 99;
+      transform: translateX(0);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    @media (max-width: 900px) {
+      .sidebar {
+        transform: translateX(-100%);
+        box-shadow: none;
+      }
+      .sidebar.is-open {
+        transform: translateX(0);
+        box-shadow: var(--shadow);
+      }
+    }
+
+    .sidebar-brand {
+      padding: 1.25rem 1.25rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-brand h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .sidebar-brand p {
+      margin: 0.35rem 0 0;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .search-wrap {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .search {
+      position: relative;
+    }
+    .search input {
+      width: 100%;
+      padding: 0.65rem 0.85rem 0.65rem 2.35rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .search input::placeholder { color: var(--text-muted); }
+    .search input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .search svg {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      opacity: 0.45;
+    }
+
+    .nav-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem 0 1.5rem;
+    }
+    .nav-label {
+      padding: 0.5rem 1.25rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .nav a {
+      display: block;
+      padding: 0.5rem 1.25rem 0.5rem 1.5rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      border-left: 2px solid transparent;
+      margin-left: 0;
+      transition: color var(--transition), background var(--transition), border-color var(--transition);
+    }
+    .nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .nav a.hidden-by-search { display: none; }
+
+    .sidebar-footer {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Main */
+    .main-wrap {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    @media (max-width: 900px) {
+      .main-wrap { margin-left: 0; }
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0 1.5rem;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .menu-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg-card);
+      color: var(--text);
+      cursor: pointer;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .menu-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
+    @media (max-width: 900px) { .menu-btn { display: flex; } }
+
+    .breadcrumb {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .breadcrumb span { color: var(--text); }
+
+    .topbar-spacer { flex: 1; }
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.25rem 0.5rem;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(61, 139, 253, 0.25);
+    }
+
+    .content {
+      flex: 1;
+      max-width: 820px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* Article blocks — fade when filtered */
+    article.doc-section {
+      scroll-margin-top: calc(var(--header-h) + 1rem);
+      margin-bottom: 2.5rem;
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    article.doc-section.is-hidden {
+      display: none;
+    }
+
+    .hero {
+      margin-bottom: 2.5rem;
+      animation: heroIn 0.6s ease both;
+    }
+    @keyframes heroIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hero h2 {
+      margin: 0 0 0.75rem;
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 52ch;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0 0 1rem;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .section-title .anchor {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      opacity: 0;
+      transition: opacity var(--transition);
+      text-decoration: none;
+    }
+    .section-title:hover .anchor { opacity: 1; }
+
+    .prose p { margin: 0 0 1rem; color: var(--text-muted); }
+    .prose p strong { color: var(--text); }
+    .prose ul { margin: 0 0 1rem; padding-left: 1.25rem; color: var(--text-muted); }
+    .prose li { margin-bottom: 0.35rem; }
+
+    /* Callout */
+    .callout {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem 1.15rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      margin: 1.25rem 0;
+      transition: border-color var(--transition), transform 0.2s ease;
+    }
+    .callout:hover { border-color: rgba(61, 139, 253, 0.25); }
+    .callout-icon { flex-shrink: 0; font-size: 1.25rem; }
+    .callout h4 { margin: 0 0 0.35rem; font-size: 0.95rem; color: var(--text); }
+    .callout p { margin: 0; font-size: 0.875rem; color: var(--text-muted); }
+
+    /* Accordion */
+    .accordion {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--bg-card);
+      margin: 1.25rem 0;
+    }
+    .accordion-item + .accordion-item { border-top: 1px solid var(--border); }
+    .accordion-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.15rem;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .accordion-trigger:hover { background: rgba(255, 255, 255, 0.03); }
+    .accordion-trigger svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      transition: transform var(--transition);
+      opacity: 0.6;
+    }
+    .accordion-item.is-open .accordion-trigger svg { transform: rotate(180deg); }
+    .accordion-panel {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .accordion-item.is-open .accordion-panel { grid-template-rows: 1fr; }
+    .accordion-panel-inner {
+      overflow: hidden;
+    }
+    .accordion-body {
+      padding: 0 1.15rem 1.1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Tabs demo */
+    .demo-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      overflow: hidden;
+      margin: 1.5rem 0;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
+    }
+    .demo-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1.1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid var(--border);
+    }
+    .demo-header span {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+    .demo-dots { display: flex; gap: 6px; }
+    .demo-dots i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+    .demo-dots i:nth-child(1) { background: #ff5f57; }
+    .demo-dots i:nth-child(2) { background: #febc2e; }
+    .demo-dots i:nth-child(3) { background: #28c840; }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 0.5rem;
+    }
+    .tab {
+      padding: 0.75rem 1rem;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      cursor: pointer;
+      transition: color var(--transition), border-color var(--transition);
+    }
+    .tab:hover { color: var(--text); }
+    .tab.is-active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .tab-panels { position: relative; min-height: 140px; }
+    .tab-panel {
+      position: absolute;
+      inset: 0;
+      padding: 1.15rem;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(6px);
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+    }
+    .tab-panel.is-active {
+      position: relative;
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .tab-panel p { margin: 0 0 0.75rem; font-size: 0.875rem; color: var(--text-muted); }
+    .mini-kanban {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .kan-col {
+      flex: 1;
+      min-width: 72px;
+      padding: 0.5rem;
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .kan-card {
+      margin-top: 0.4rem;
+      padding: 0.45rem;
+      border-radius: 6px;
+      background: var(--accent-soft);
+      color: var(--text);
+      font-size: 0.7rem;
+      font-weight: 500;
+    }
+
+    /* Interactive checklist demo */
+    .checklist { list-style: none; margin: 0; padding: 0; }
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      transition: color var(--transition);
+    }
+    .checklist li:last-child { border-bottom: none; }
+    .checklist li.done { color: var(--text-muted); opacity: 0.65; }
+    .checklist li.done span { text-decoration: line-through; }
+    .check-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      transition: border-color var(--transition), background var(--transition), transform 0.15s ease;
+    }
+    .check-btn:hover { border-color: var(--accent); }
+    .check-btn.is-on {
+      background: var(--success);
+      border-color: var(--success);
+      color: #042;
+    }
+    .check-btn:active { transform: scale(0.92); }
+
+    /* Code */
+    pre {
+      margin: 1rem 0;
+      padding: 1rem 1.1rem;
+      border-radius: var(--radius-sm);
+      background: #0a0c10;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      line-height: 1.5;
+      color: #a8b4d0;
+    }
+    code.inline {
+      font-family: var(--mono);
+      font-size: 0.82em;
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--accent);
+    }
+
+    /* Search empty state */
+    .search-empty {
+      display: none;
+      text-align: center;
+      padding: 3rem 1.5rem;
+      color: var(--text-muted);
+    }
+    .search-empty.is-visible { display: block; animation: heroIn 0.4s ease both; }
+    .search-empty strong { color: var(--text); display: block; margin-bottom: 0.5rem; }
+
+    /* Keyboard hint */
+    kbd {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-mesh" aria-hidden="true"></div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Documentation navigation">
+      <div class="sidebar-brand">
+        <h1>RadiantRoof Guide</h1>
+        <p>Sample documentation prototype</p>
+      </div>
+      <div class="search-wrap">
+        <div class="search">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
+          </svg>
+          <input
+            type="search"
+            id="docSearch"
+            placeholder="Search topics…"
+            autocomplete="off"
+            aria-label="Filter documentation"
+          />
+        </div>
+      </div>
+      <nav class="nav-scroll" aria-label="Page sections">
+        <div class="nav-label">On this guide</div>
+        <div class="nav" id="navLinks"></div>
+      </nav>
+      <div class="sidebar-footer">
+        Press <kbd>/</kbd> to focus search · Single HTML file
+      </div>
+    </aside>
+
+    <div class="main-wrap">
+      <header class="topbar">
+        <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="sidebar">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="breadcrumb">Docs <span>/</span> Getting started</div>
+        <div class="topbar-spacer"></div>
+        <span class="badge">Prototype</span>
+      </header>
+
+      <main class="content" id="mainContent">
+        <div class="hero" id="intro">
+          <h2>Welcome to your deal pipeline</h2>
+          <p>
+            This sample guide demonstrates a modern, self-contained documentation layout:
+            sticky header, animated sections, live search, accordions, and embedded UI demos—no build step required.
+          </p>
+        </div>
+
+        <div class="search-empty" id="searchEmpty" aria-live="polite">
+          <strong>No matching sections</strong>
+          Try different keywords or clear the search field.
+        </div>
+
+        <article class="doc-section" id="quickstart" data-keywords="start setup install first launch dashboard">
+          <h3 class="section-title">
+            Quickstart
+            <a class="anchor" href="#quickstart" aria-label="Link to Quickstart">#</a>
+          </h3>
+          <div class="prose">
+            <p>Open this file in any browser: <code class="inline">user-guide-sample.html</code>. Use the left nav or scroll; on narrow screens, tap the menu icon to open the drawer.</p>
+            <ul>
+              <li><strong>Pipeline</strong> — Track deals from sourcing through exit.</li>
+              <li><strong>Screening &amp; analysis</strong> — Refine repair estimates and feasibility.</li>
+              <li><strong>Renovation</strong> — Manage scope, budgets, and milestones.</li>
+            </ul>
+          </div>
+          <div class="callout">
+            <span class="callout-icon">💡</span>
+            <div>
+              <h4>Tip</h4>
+              <p>Type “budget”, “pipeline”, or “keyboard” in the search box to see live filtering across all sections and nav links.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="doc-section" id="navigation" data-keywords="nav sidebar menu mobile drawer scroll keyboard shortcut">
+          <h3 class="section-title">
+            Navigation &amp; layout
+            <a class="anchor" href="#navigation" aria-label="Link to Navigation">#</a>
+          </h3>
+          <div class="prose">
+            <p>The sidebar stays fixed on desktop. IntersectionObserver highlights the active section as you scroll for an app-like “you are here” feel.</p>
+          </div>
+          <div class="accordion" id="navAccordion">
+            <div class="accordion-item is-open">
+              <button type="button" class="accordion-trigger" aria-expanded="true">
+                Desktop behavior
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div class="accordion-panel"><div class="accordion-panel-inner"><div class="accordion-body">Sidebar + content split. Search filters both navigation labels and section visibility. Matched sections fade; non-matches hide completely when the query is specific enough.</div></div></div>
+            </div>
+            <div class="accordion-item">
+              <button type="button" class="accordion-trigger" aria-expanded="false">
+                Mobile &amp; tablet
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div class="accordion-panel"><div class="accordion-panel-inner"><div class="accordion-body">Below 900px width, the sidebar becomes a slide-over drawer. Tap outside or a nav link to dismiss. Touch targets meet a minimum 40px for the menu control.</div></div></div>
+            </div>
+            <div class="accordion-item">
+              <button type="button" class="accordion-trigger" aria-expanded="false">
+                Keyboard
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div class="accordion-panel"><div class="accordion-panel-inner"><div class="accordion-body">Press <kbd>/</kbd> (outside inputs) to jump to search. <kbd>Escape</kbd> clears search when focused or closes the mobile drawer.</div></div></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="doc-section" id="search" data-keywords="search filter find topics dynamic live">
+          <h3 class="section-title">
+            Built-in search
+            <a class="anchor" href="#search" aria-label="Link to Built-in search">#</a>
+          </h3>
+          <div class="prose">
+            <p>Search runs entirely in the browser. Each section declares <code class="inline">data-keywords</code> for fuzzy matching alongside visible headings and paragraphs.</p>
+          </div>
+          <pre><code>// Example: section metadata
+&lt;article data-keywords="arv repair estimate screening"&gt;
+  ...
+&lt;/article&gt;</code></pre>
+        </article>
+
+        <article class="doc-section" id="demo-pipeline" data-keywords="demo pipeline kanban stages sourcing screening deal">
+          <h3 class="section-title">
+            Embedded demo — pipeline
+            <a class="anchor" href="#demo-pipeline" aria-label="Link to Embedded demo">#</a>
+          </h3>
+          <div class="prose">
+            <p>Tabs switch content with a short cross-fade. The second tab shows a stylized mini pipeline inspired by deal stages.</p>
+          </div>
+          <div class="demo-card">
+            <div class="demo-header">
+              <div class="demo-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+              <span>Live preview</span>
+            </div>
+            <div class="tabs" role="tablist" aria-label="Demo tabs">
+              <button type="button" class="tab is-active" role="tab" aria-selected="true" data-tab="overview">Overview</button>
+              <button type="button" class="tab" role="tab" aria-selected="false" data-tab="stages">Stages</button>
+              <button type="button" class="tab" role="tab" aria-selected="false" data-tab="checklist">Checklist</button>
+            </div>
+            <div class="tab-panels">
+              <div class="tab-panel is-active" id="panel-overview" role="tabpanel">
+                <p>Move opportunities through <strong>sourcing → screening → analysis → acquisition → renovation</strong>. Each stage owns different data: leads, estimates, offers, then execution.</p>
+                <p style="margin-bottom:0">This prototype uses static HTML—your app would hydrate from API or local state.</p>
+              </div>
+              <div class="tab-panel" id="panel-stages" role="tabpanel" hidden>
+                <p style="margin-bottom:0.75rem">Sample board (read-only):</p>
+                <div class="mini-kanban">
+                  <div class="kan-col">Source<div class="kan-card">Oak Ln</div></div>
+                  <div class="kan-col">Screen<div class="kan-card">Maple</div></div>
+                  <div class="kan-col">Analyze<div class="kan-card">Pine</div></div>
+                  <div class="kan-col">Renovate<div class="kan-card">Cedar</div></div>
+                </div>
+              </div>
+              <div class="tab-panel" id="panel-checklist" role="tabpanel" hidden>
+                <p style="margin-bottom:0.5rem">Try toggling items:</p>
+                <ul class="checklist" id="demoChecklist">
+                  <li data-id="1"><button type="button" class="check-btn" aria-pressed="false" aria-label="Toggle item"></button><span>Import lead CSV</span></li>
+                  <li data-id="2"><button type="button" class="check-btn" aria-pressed="false" aria-label="Toggle item"></button><span>Complete screening checklist</span></li>
+                  <li data-id="3"><button type="button" class="check-btn" aria-pressed="false" aria-label="Toggle item"></button><span>Lock repair budget in analysis</span></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="doc-section" id="budget" data-keywords="budget finance arv repair costs contingency money">
+          <h3 class="section-title">
+            Budgets &amp; feasibility
+            <a class="anchor" href="#budget" aria-label="Link to Budgets">#</a>
+          </h3>
+          <div class="prose">
+            <p>Underwriting uses <strong>ARV</strong>, <strong>repair reserves</strong>, and <strong>contingency</strong>. Keep investor estimates separate from contractor bids until you move into renovation execution—then reconcile actuals.</p>
+          </div>
+          <div class="callout">
+            <span class="callout-icon">📊</span>
+            <div>
+              <h4>Sample metric</h4>
+              <p>70% rule quick check: <code class="inline">(ARV × 0.7) − repairs − fees ≈ max offer</code>. Tune percentages per market risk.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="doc-section" id="support" data-keywords="help support contact feedback community">
+          <h3 class="section-title">
+            Support
+            <a class="anchor" href="#support" aria-label="Link to Support">#</a>
+          </h3>
+          <div class="prose">
+            <p>This page is a <strong>design reference</strong> for a one-file user guide. Ship it as static hosting, embed in Electron via <code class="inline">file://</code> or <code class="inline">loadURL</code>, or split into components later.</p>
+          </div>
+        </article>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const sections = Array.from(document.querySelectorAll("article.doc-section"));
+      const navContainer = document.getElementById("navLinks");
+      const searchInput = document.getElementById("docSearch");
+      const searchEmpty = document.getElementById("searchEmpty");
+      const mainContent = document.getElementById("mainContent");
+      const sidebar = document.getElementById("sidebar");
+      const drawerBackdrop = document.getElementById("drawerBackdrop");
+      const menuBtn = document.getElementById("menuBtn");
+
+      const navMeta = sections.map((el) => ({
+        id: el.id,
+        label: el.querySelector(".section-title")?.textContent.replace("#", "").trim() || el.id,
+      }));
+
+      function renderNav() {
+        navContainer.innerHTML = navMeta
+          .map(
+            (m) =>
+              `<a href="#${m.id}" data-section="${m.id}">${escapeHtml(m.label)}</a>`
+          )
+          .join("");
+      }
+
+      function escapeHtml(s) {
+        return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+
+      function normalize(s) {
+        return (s || "").toLowerCase().replace(/\s+/g, " ").trim();
+      }
+
+      function collectSectionText(el) {
+        const kw = el.getAttribute("data-keywords") || "";
+        return normalize(el.innerText + " " + kw);
+      }
+
+      function scoreMatch(query, text) {
+        if (!query) return true;
+        const q = normalize(query);
+        if (!q) return true;
+        if (text.includes(q)) return true;
+        const parts = q.split(" ").filter(Boolean);
+        return parts.every((p) => text.includes(p));
+      }
+
+      function applySearch() {
+        const q = searchInput.value;
+        const hasQuery = normalize(q).length > 0;
+        let anyVisible = false;
+
+        sections.forEach((el) => {
+          const blob = collectSectionText(el);
+          const match = scoreMatch(q, blob);
+          el.classList.toggle("is-hidden", hasQuery && !match);
+          if (!hasQuery || match) anyVisible = true;
+        });
+
+        navContainer.querySelectorAll("a").forEach((a) => {
+          const id = a.getAttribute("data-section");
+          const sec = document.getElementById(id);
+          const blob = sec ? collectSectionText(sec) : "";
+          const match = scoreMatch(q, blob);
+          a.classList.toggle("hidden-by-search", hasQuery && !match);
+        });
+
+        document.getElementById("intro").style.display = hasQuery && !anyVisible ? "none" : "";
+        searchEmpty.classList.toggle("is-visible", hasQuery && !anyVisible);
+      }
+
+      let searchDebounce;
+      searchInput.addEventListener("input", () => {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(applySearch, 120);
+      });
+
+      // Scroll spy
+      const navLinks = () => navContainer.querySelectorAll("a[data-section]");
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((en) => {
+            if (!en.isIntersecting) return;
+            const id = en.target.id;
+            navLinks().forEach((a) => {
+              a.classList.toggle("active", a.getAttribute("data-section") === id);
+            });
+          });
+        },
+        { rootMargin: "-45% 0px -45% 0px", threshold: 0 }
+      );
+
+      sections.forEach((s) => observer.observe(s));
+
+      navContainer.addEventListener("click", (e) => {
+        const a = e.target.closest("a[data-section]");
+        if (!a) return;
+        closeDrawer();
+      });
+
+      // Accordion
+      document.getElementById("navAccordion").addEventListener("click", (e) => {
+        const btn = e.target.closest(".accordion-trigger");
+        if (!btn) return;
+        const item = btn.closest(".accordion-item");
+        const open = item.classList.contains("is-open");
+        item.parentElement.querySelectorAll(".accordion-item").forEach((it) => {
+          it.classList.remove("is-open");
+          it.querySelector(".accordion-trigger").setAttribute("aria-expanded", "false");
+        });
+        if (!open) {
+          item.classList.add("is-open");
+          btn.setAttribute("aria-expanded", "true");
+        }
+      });
+
+      // Tabs
+      const tabBtns = document.querySelectorAll(".tab");
+      const panels = {
+        overview: document.getElementById("panel-overview"),
+        stages: document.getElementById("panel-stages"),
+        checklist: document.getElementById("panel-checklist"),
+      };
+
+      tabBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-tab");
+          tabBtns.forEach((b) => {
+            b.classList.toggle("is-active", b === btn);
+            b.setAttribute("aria-selected", b === btn ? "true" : "false");
+          });
+          Object.entries(panels).forEach(([k, p]) => {
+            const on = k === key;
+            p.classList.toggle("is-active", on);
+            p.toggleAttribute("hidden", !on);
+          });
+        });
+      });
+
+      // Checklist demo
+      document.getElementById("demoChecklist").addEventListener("click", (e) => {
+        const b = e.target.closest(".check-btn");
+        if (!b) return;
+        const on = !b.classList.contains("is-on");
+        b.classList.toggle("is-on", on);
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+        b.innerHTML = on
+          ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 6l3 3 5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+          : "";
+        b.closest("li").classList.toggle("done", on);
+      });
+
+      // Drawer
+      function openDrawer() {
+        sidebar.classList.add("is-open");
+        drawerBackdrop.hidden = false;
+        requestAnimationFrame(() => drawerBackdrop.classList.add("is-open"));
+        menuBtn.setAttribute("aria-expanded", "true");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeDrawer() {
+        sidebar.classList.remove("is-open");
+        drawerBackdrop.classList.remove("is-open");
+        menuBtn.setAttribute("aria-expanded", "false");
+        document.body.style.overflow = "";
+        setTimeout(() => {
+          if (!sidebar.classList.contains("is-open")) drawerBackdrop.hidden = true;
+        }, 220);
+      }
+
+      menuBtn.addEventListener("click", () => {
+        if (sidebar.classList.contains("is-open")) closeDrawer();
+        else openDrawer();
+      });
+      drawerBackdrop.addEventListener("click", closeDrawer);
+      window.addEventListener("resize", () => {
+        if (window.innerWidth > 900) closeDrawer();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          if (document.activeElement === searchInput && searchInput.value) {
+            searchInput.value = "";
+            applySearch();
+          } else closeDrawer();
+        }
+        if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          const tag = (document.activeElement && document.activeElement.tagName) || "";
+          if (tag === "INPUT" || tag === "TEXTAREA" || document.activeElement?.isContentEditable) return;
+          e.preventDefault();
+          searchInput.focus();
+        }
+      });
+
+      renderNav();
+      applySearch();
+    })();
+  </script>
+</body>
+</html>

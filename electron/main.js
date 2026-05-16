@@ -25,6 +25,21 @@ const http = require('http');
 
 let mainWindow;
 let backendProcess = null;
+/** True after the first successful `createWindow()` completes wiring (macOS `activate` guard). */
+let initialWindowCreated = false;
+
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+  process.exit(0);
+}
+
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  }
+});
 
 // ---------------------------------------------
 // Environment
@@ -124,6 +139,11 @@ function registerAppProtocol() {
 // ---------------------------------------------
 
 function createWindow() {
+  if (!app.isReady()) {
+    console.warn('createWindow: skipped before app.ready');
+    return;
+  }
+
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 950,
@@ -153,28 +173,101 @@ function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+
+  initialWindowCreated = true;
 }
 
 // ---------------------------------------------
 // Start Backend
 // ---------------------------------------------
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function pingBackendHealth(port) {
+  return new Promise((resolve, reject) => {
+    const req = http.get(`http://127.0.0.1:${port}/api/health`, (res) => {
+      res.resume();
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        resolve();
+      } else {
+        reject(new Error(`HTTP ${res.statusCode}`));
+      }
+    });
+    req.setTimeout(2000, () => {
+      req.destroy();
+      reject(new Error('timeout'));
+    });
+    req.on('error', reject);
+  });
+}
+
+async function waitForBackendListening(port, childProcess, maxWaitMs = 120000, getStderr = () => '') {
+  const deadline = Date.now() + maxWaitMs;
+  while (Date.now() < deadline) {
+    if (childProcess.exitCode !== null) {
+      const tail = (getStderr() || '').trim().slice(-4000);
+      throw new Error(
+        `The backend stopped unexpectedly (exit code ${childProcess.exitCode}).` +
+          (tail ? `\n\n${tail}` : '')
+      );
+    }
+    try {
+      await pingBackendHealth(port);
+      return;
+    } catch {
+      await sleep(250);
+    }
+  }
+  throw new Error(
+    'The backend did not become ready in time. Another process may be using port 5001.' +
+      (() => {
+        const t = (getStderr() || '').trim().slice(-4000);
+        return t ? `\n\n${t}` : '';
+      })()
+  );
+}
+
+function isPathInsidePlainAppAsar(filePath) {
+  return filePath.split(path.sep).indexOf('app.asar') !== -1;
+}
+
+function isPathInsideAppAsarUnpacked(filePath) {
+  return filePath.split(path.sep).includes('app.asar.unpacked');
+}
+
+function getBackendSpawnCwd(backendPath) {
+  const dir = path.dirname(backendPath);
+  if (isPathInsidePlainAppAsar(dir) && !isPathInsideAppAsarUnpacked(dir)) {
+    return process.resourcesPath;
+  }
+  try {
+    if (fs.existsSync(dir) && fs.statSync(dir).isDirectory()) {
+      return dir;
+    }
+  } catch {
+    // ignore
+  }
+  return process.resourcesPath;
+}
+
 async function startBackend() {
+  let backendStderr = '';
   try {
     if (isDev) {
       console.log('ℹ️  Development mode: backend expected to be running externally on port 5001');
-      return;
+      return { ok: true };
     }
 
     const possiblePaths = [
-      path.join(__dirname, '../radiantroof-server/server.js'),
-      path.join(__dirname, '../../radiantroof-server/server.js'),
-      path.join(process.resourcesPath, 'radiantroof-server/server.js'),
-      path.join(process.resourcesPath, 'app.asar.unpacked', 'radiantroof-server/server.js'),
+      path.join(process.resourcesPath, 'app.asar.unpacked', 'radiantroof-server', 'server.js'),
+      path.join(process.resourcesPath, 'radiantroof-server', 'server.js'),
+      path.join(__dirname, '..', 'radiantroof-server', 'server.js'),
+      path.join(__dirname, '..', '..', 'radiantroof-server', 'server.js'),
     ];
 
     let backendPath = null;
-
     for (const testPath of possiblePaths) {
       if (fs.existsSync(testPath)) {
         backendPath = testPath;
@@ -185,27 +278,71 @@ async function startBackend() {
 
     if (!backendPath) {
       console.error('❌ Could not find server.js in any expected location.');
-      return;
+      return {
+        ok: false,
+        error:
+          'Could not find the bundled backend (server.js). Rebuild or reinstall the application.',
+      };
     }
 
-    backendProcess = spawn(
-      process.execPath,
-      [backendPath],
-      {
-        cwd: path.dirname(backendPath),
-        env: {
-          ...process.env,
-          PORT: serverPort,
-          DB_STORAGE: dbPath,
-          NODE_ENV: 'production',
-        },
-        stdio: 'inherit',
-      }
-    );
+    const backendCwd = getBackendSpawnCwd(backendPath);
+    const childEnv = {
+      ...process.env,
+      ELECTRON_RUN_AS_NODE: '1',
+      PORT: String(serverPort),
+      DB_STORAGE: dbPath,
+      DB_DIALECT: 'sqlite',
+      NODE_ENV: 'production',
+      CORS_ORIGIN:
+        process.env.CORS_ORIGIN ||
+        'http://localhost:3000,http://localhost:5001,app://-',
+    };
+    // Inherited NODE_OPTIONS / NODE_PATH can break the Electron-as-Node child; resolve from server.js path only.
+    delete childEnv.NODE_OPTIONS;
+    delete childEnv.NODE_PATH;
 
-    backendProcess.on('spawn', () => {
-      console.log('✅ Backend process spawned with PID:', backendProcess.pid);
+    const appendStderr = (chunk) => {
+      backendStderr += chunk.toString();
+      if (backendStderr.length > 16000) {
+        backendStderr = backendStderr.slice(-16000);
+      }
+    };
+
+    backendProcess = spawn(process.execPath, [backendPath], {
+      cwd: backendCwd,
+      env: childEnv,
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
+
+    backendProcess.stdout.on('data', (chunk) => {
+      console.log('[backend]', chunk.toString().trimEnd());
+    });
+    backendProcess.stderr.on('data', (chunk) => {
+      appendStderr(chunk);
+      console.error('[backend]', chunk.toString().trimEnd());
+    });
+
+    await new Promise((resolve, reject) => {
+      const onError = (err) => {
+        clearTimeout(tid);
+        backendProcess.off('spawn', onSpawn);
+        reject(err);
+      };
+      const onSpawn = () => {
+        clearTimeout(tid);
+        backendProcess.off('error', onError);
+        resolve();
+      };
+      const tid = setTimeout(() => {
+        backendProcess.off('error', onError);
+        backendProcess.off('spawn', onSpawn);
+        reject(new Error('Backend process did not spawn within 15 seconds.'));
+      }, 15000);
+      backendProcess.once('error', onError);
+      backendProcess.once('spawn', onSpawn);
+    });
+
+    console.log('✅ Backend process spawned with PID:', backendProcess.pid);
 
     backendProcess.on('error', (err) => {
       console.error('❌ Backend failed to start:', err);
@@ -215,16 +352,29 @@ async function startBackend() {
       console.log(`Backend exited with code ${code}`);
     });
 
-    // Health check after 5 seconds
-    setTimeout(() => {
-      http.get(`http://localhost:${serverPort}/api/health`, (res) => {
-        console.log('✅ Backend health check:', res.statusCode);
-      }).on('error', (err) => {
-        console.error('❌ Backend not reachable:', err.message);
-      });
-    }, 5000);
+    await waitForBackendListening(serverPort, backendProcess, 120000, () => backendStderr);
+    console.log('✅ Backend is ready');
+    return { ok: true };
   } catch (error) {
     console.error('Failed to start backend:', error);
+    if (backendProcess && !backendProcess.killed) {
+      backendProcess.kill();
+      backendProcess = null;
+    }
+    const logPath = path.join(app.getPath('userData'), 'backend-crash.log');
+    try {
+      fs.writeFileSync(
+        logPath,
+        `${error?.message || error}\n\n--- stderr ---\n${backendStderr}`,
+        'utf8'
+      );
+    } catch {
+      // ignore
+    }
+    return {
+      ok: false,
+      error: `${error.message || String(error)}\n\nLog: ${logPath}`,
+    };
   }
 }
 
@@ -234,13 +384,25 @@ async function startBackend() {
 
 async function initApp() {
   try {
-    await startBackend();
-
-    if (!isDev) {
-      registerAppProtocol();
+    const backend = await startBackend();
+    if (!isDev && !backend.ok) {
+      dialog.showErrorBox(
+        'RadiantRoof Realty — server failed to start',
+        backend.error || 'Unknown error'
+      );
+      app.quit();
+      return;
     }
   } catch (error) {
     console.error(error);
+    if (!isDev) {
+      dialog.showErrorBox(
+        'RadiantRoof Realty — server failed to start',
+        error.message || String(error)
+      );
+      app.quit();
+      return;
+    }
   }
 
   createWindow();
@@ -332,6 +494,12 @@ app.whenReady().then(() => {
 });
 
 app.on('activate', () => {
+  if (!app.isReady()) {
+    return;
+  }
+  if (!initialWindowCreated) {
+    return;
+  }
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }

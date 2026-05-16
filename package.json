@@ -12,15 +12,17 @@
     "build:server": "npm --prefix radiantroof-server run build",
     "build": "npm run build:client && npm run build:server",
     "postbuild": "echo 'Build completed successfully'",
-    "dist": "npm run build && electron-builder build --publish=never",
-    "dist:mac": "npm run build && electron-builder build --mac --publish=never",
-    "dist:win": "npm run build && electron-builder build --win --publish=never",
-    "dist:linux": "npm run build && electron-builder build --linux --publish=never",
+    "dist": "npm run rebuild:server-native && npm run build && electron-builder build --publish=never",
+    "rebuild:server-native": "electron-rebuild --force --module-dir ./radiantroof-server",
+    "dist:mac": "npm run rebuild:server-native && npm run build && electron-builder build --mac --publish=never",
+    "dist:win": "npm run rebuild:server-native && npm run build && electron-builder build --win --publish=never",
+    "dist:linux": "npm run rebuild:server-native && npm run build && electron-builder build --linux --publish=never",
     "package": "npm run dist"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
+    "@electron/rebuild": "^4.0.4",
     "electron": "^28.3.3",
     "electron-builder": "^24.13.3",
     "wait-on": "^7.2.0"
@@ -35,15 +37,20 @@
       "**/node_modules/better-sqlite3/**/*",
       "**/radiantroof-server/**/*"
     ],
-    "npmRebuild": false,
+    "npmRebuild": true,
     "files": [
       "electron/**/*",
       "radiantroof-server/**/*",
+      {
+        "from": "radiantroof-server/node_modules",
+        "to": "radiantroof-server/node_modules",
+        "filter": ["**/*"]
+      },
       "radiantroof-client/out/**/*",
       "radiantroof-client/public/**/*",
       "radiantroof-client/package.json",
       "radiantroof-server/package.json",
-      "!**/node_modules/**/*",
+      "!node_modules/**/*",
       "!**/*.map",
       "!**/test/**",
       "!**/tests/**",

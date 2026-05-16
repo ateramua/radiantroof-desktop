@@ -6,10 +6,10 @@ const getApiBaseUrl = () => {
   // Check if running in Electron
   if (typeof window !== "undefined" && window.electronAPI) {
     // For Electron, use default port initially - will be updated later
-    return "http://localhost:5001";
+    return "http://127.0.0.1:5001";
   }
   // Fallback to environment or default
-  return process.env.NEXT_PUBLIC_API_BASE || "http://localhost:5001";
+  return process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:5001";
 };
 
 // Create HTTPS agent for production SSL verification
@@ -34,7 +34,7 @@ export const updateApiBaseUrl = async () => {
   if (typeof window !== "undefined" && window.electronAPI) {
     try {
       const port = await window.electronAPI.getBackendPort();
-      api.defaults.baseURL = `http://localhost:${port}`;
+      api.defaults.baseURL = `http://127.0.0.1:${port}`;
       console.log('✅ Updated API base URL to:', api.defaults.baseURL);
     } catch (error) {
       console.warn('⚠️ Failed to update API base URL:', error);

@@ -177,11 +177,3 @@ db.sequelize.authenticate()
     console.error('   Continuing with server startup. Database operations may fail.');
     await startServer();
   });
-
-
-  // At the bottom of server.js
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-  console.log(`   Database path: ${process.env.DB_STORAGE || './radiantroof.sqlite'}`);
-});

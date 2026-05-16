@@ -79,7 +79,7 @@ export function AuthProvider({ children }) {
       throw new Error(serverMessage);
     } else if (err.request) {
       console.error('❌ No response received. Request:', err.request);
-      throw new Error('No response from server. Check if backend is running on port 5001');
+      throw new Error('No response from server. Check that the API is reachable on port 5001 (127.0.0.1).');
     } else {
       console.error('❌ Request setup error:', err.message);
       throw err;
