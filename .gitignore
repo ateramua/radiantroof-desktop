@@ -1,66 +1,170 @@
-# ==========================
-# Node.js / JavaScript
-# ==========================
+# Dependencies and package manager caches
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+.pnp/
+.pnp.*
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.npm/
 
-# ==========================
-# Environment / Secret files
-# ==========================
+# Environment and secrets
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
+!.env.sample
+*.local
+*.secret
+*.secrets
+*.token
+*.credentials
 
-# ==========================
-# Build / Cache
-# ==========================
+# Next.js, Electron, and Capacitor build outputs
 .next/
 out/
 dist/
 build/
-.cache/
-.vite/
+release/
+release-builds/
+app-build/
+electron-builder-out/
+electron-dist/
+radiantroof-client/.next/
+radiantroof-client/out/
+radiantroof-client/build/
+radiantroof-server/dist/
+radiantroof-server/build/
 
-# ==========================
-# MacOS / OS files
-# ==========================
-.DS_Store
-Thumbs.db
+# Packaged installers and application bundles
+*.app/
+*.asar
+*.dmg
+*.exe
+*.AppImage
+*.snap
+*.deb
+*.rpm
+*.msi
+*.pkg
+*.zip
+*.tar.gz
+*.tgz
 
-# ==========================
-# Logs
-# ==========================
+# Databases, local app data, and backups
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.dump
+*.backup
+*.bak
+pgdata/
+data/
+user-data/
+app-data/
+storage/
+backups/
+radiantroof-server/radiantroof.sqlite*
+radiantroof-server/prisma/*.db
+
+# Logs and runtime process files
 logs/
 *.log
 *.log.*
 debug.log
-
-# ==========================
-# Database / local files
-# ==========================
-*.sqlite
-*.db
-*.dump
-pgdata/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+electron-debug.log*
+pids/
 *.pid
+*.pid.lock
 
-# ==========================
-# IDE / Editor
-# ==========================
-.vscode/
-.idea/
-*.sublime-workspace
-*.sublime-project
-
-# ==========================
-# Misc
-# ==========================
+# Test, coverage, and browser automation artifacts
 coverage/
-*.tgz
-*.zip
-*.tar.gz
+.nyc_output/
+*.lcov
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.playwright/
+.playwright-browsers/
+electron-test-data/
+chrome-user-data/
+test-user-data/
+.vscode-test/
+
+# Native, bundler, and compiler caches
+.cache/
+.parcel-cache/
+.vite/
+.turbo/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+build/Release/
+lib-cov/
+.grunt/
+
+# Mobile/native generated state
+radiantroof-client/android/.gradle/
+radiantroof-client/android/app/build/
+radiantroof-client/android/app/debug/
+radiantroof-client/android/app/release/
+radiantroof-client/ios/Pods/
+radiantroof-client/ios/build/
+radiantroof-client/ios/DerivedData/
+
+# Code signing, certificates, and private keys
+*.p12
+*.pfx
+*.cert
+*.cer
+*.crt
+*.key
+*.pem
+*.mobileprovision
+certificates/
+certs/
+keys/
+signing/
+electron-publisher-certs/
+sign-key/
+
+# Deployment and hosting local state
+.vercel/
+.now/
+.netlify/
+.serverless/
+.sentryclirc
+.sentry.properties
+
+# OS and editor files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+.idea/
+.vscode/
+.vscode-insiders/
+.vs/
+.history/
+*.code-workspace
+*.sublime-*
+*.swp
+*.swo
+*~
+
+# Temporary files
+.tmp/
+.temp/
+tmp/
+temp/

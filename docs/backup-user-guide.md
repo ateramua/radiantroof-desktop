@@ -139,4 +139,4 @@ You can restore data from a previously exported backup file.
 ---
 
 ## File location
-This guide is stored in the project root as `BACKUP_USER_GUIDE.md`.
+This guide is stored in `docs/backup-user-guide.md`.

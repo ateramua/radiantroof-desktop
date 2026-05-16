@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Link from "next/link";
-import Todos from "@/components/Todos";
 
 // Spiritual quotes array for rotation
 const spiritualQuotes = [
@@ -304,10 +303,6 @@ export default function Home() {
                 style={{ animationDelay: `${i * 0.2}s` }}
               ></div>
             ))}
-          </div>
-          <div>
-            <h1>My Todos</h1>
-            <Todos />
           </div>
         </div>
       </main>
